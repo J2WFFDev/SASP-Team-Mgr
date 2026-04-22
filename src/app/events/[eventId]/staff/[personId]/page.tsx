@@ -1,0 +1,85 @@
+import { prisma } from "@/lib/prisma";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+
+export const dynamic = "force-dynamic";
+
+export default async function StaffSchedulePage({
+  params,
+}: {
+  params: { eventId: string; personId: string };
+}) {
+  const event = await prisma.event.findUnique({ where: { id: params.eventId } });
+  if (!event) notFound();
+
+  const person = await prisma.person.findUnique({ where: { id: params.personId } });
+  if (!person) notFound();
+
+  const assignments = await prisma.staffAssignment.findMany({
+    where: { eventId: params.eventId, personId: params.personId },
+    include: { flight: true },
+    orderBy: [
+      { flight: { flightOrder: "asc" } },
+      { flight: { startTime: "asc" } },
+      { relay: "asc" },
+    ],
+  });
+
+  return (
+    <div className="max-w-4xl mx-auto py-10 px-6">
+      <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+        <Link href="/events" className="hover:underline">Events</Link>
+        <span>/</span>
+        <Link href={`/events/${params.eventId}`} className="hover:underline">{event.name}</Link>
+        <span>/</span>
+        <Link href={`/events/${params.eventId}/staff`} className="hover:underline">Staff</Link>
+        <span>/</span>
+        <span>{person.fullName}</span>
+      </div>
+
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">{person.fullName}</h1>
+          <p className="text-sm text-gray-500 mt-1">Role: {person.role}</p>
+        </div>
+        <a
+          href={`/api/events/${params.eventId}/export?type=staff&personId=${params.personId}&format=csv`}
+          className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded text-sm"
+        >
+          Export CSV
+        </a>
+      </div>
+
+      {assignments.length === 0 ? (
+        <p className="text-gray-500">No assignments found for this person.</p>
+      ) : (
+        <div className="bg-white border border-gray-200 rounded-lg overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 border-b">
+              <tr>
+                <th className="text-left px-4 py-3 text-gray-600 font-medium">Flight</th>
+                <th className="text-left px-4 py-3 text-gray-600 font-medium">Time</th>
+                <th className="text-left px-4 py-3 text-gray-600 font-medium">Role</th>
+                <th className="text-left px-4 py-3 text-gray-600 font-medium">Stage</th>
+                <th className="text-left px-4 py-3 text-gray-600 font-medium">Relay</th>
+                <th className="text-left px-4 py-3 text-gray-600 font-medium">Notes</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {assignments.map((a) => (
+                <tr key={a.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-2 font-medium">{a.flight.name}</td>
+                  <td className="px-4 py-2 text-gray-500">{a.flight.startTime?.toLocaleString() ?? "—"}</td>
+                  <td className="px-4 py-2">{a.role ?? "—"}</td>
+                  <td className="px-4 py-2">{a.stageRef ?? "—"}</td>
+                  <td className="px-4 py-2">{a.relay ?? "—"}</td>
+                  <td className="px-4 py-2 text-gray-500">{a.notes ?? ""}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}

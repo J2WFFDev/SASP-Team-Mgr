@@ -1,0 +1,167 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  flights             Flight[]
+  stages              Stage[]
+  squads              Squad[]
+  athleteAssignments  AthleteAssignment[]
+  staffAssignments    StaffAssignment[]
+  commitmentStatuses  CommitmentStatus[]
+
+  @@map("events")
+}
+
+model Flight {
+  id          String    @id @default(cuid())
+  eventId     String
+  event       Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name        String
+  startTime   DateTime?
+  flightOrder Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  athleteAssignments AthleteAssignment[]
+  staffAssignments   StaffAssignment[]
+
+  @@unique([eventId, name])
+  @@map("flights")
+}
+
+model Stage {
+  id      String @id @default(cuid())
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name    String
+  stageOrder Int @default(0)
+
+  athleteAssignments AthleteAssignment[]
+
+  @@unique([eventId, name])
+  @@map("stages")
+}
+
+model Discipline {
+  id   String @id @default(cuid())
+  name String @unique
+  gunType String?
+
+  athleteAssignments AthleteAssignment[]
+  commitmentStatuses CommitmentStatus[]
+
+  @@map("disciplines")
+}
+
+model Person {
+  id        String  @id @default(cuid())
+  fullName  String  @unique
+  email     String?
+  role      PersonRole @default(ATHLETE)
+  division  String?
+  classLabel String?
+
+  athleteAssignments AthleteAssignment[]
+  staffAssignments   StaffAssignment[]
+  commitmentStatuses CommitmentStatus[]
+
+  @@map("persons")
+}
+
+enum PersonRole {
+  ATHLETE
+  COACH
+  RO
+  VOLUNTEER
+  STAFF
+}
+
+model Squad {
+  id        String @id @default(cuid())
+  eventId   String
+  event     Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  squadNum  Int
+  squadName String?
+  division  String?
+  classLabel String?
+
+  athleteAssignments AthleteAssignment[]
+
+  @@unique([eventId, squadNum])
+  @@map("squads")
+}
+
+model AthleteAssignment {
+  id          String  @id @default(cuid())
+  eventId     String
+  event       Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  flightId    String
+  flight      Flight  @relation(fields: [flightId], references: [id], onDelete: Cascade)
+  stageId     String?
+  stage       Stage?  @relation(fields: [stageId], references: [id])
+  personId    String
+  person      Person  @relation(fields: [personId], references: [id])
+  disciplineId String?
+  discipline  Discipline? @relation(fields: [disciplineId], references: [id])
+  squadId     String?
+  squad       Squad?  @relation(fields: [squadId], references: [id])
+  relay       Int?
+  relayCode   String?
+  shootOrder  Int?
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  @@map("athlete_assignments")
+}
+
+model StaffAssignment {
+  id       String @id @default(cuid())
+  eventId  String
+  event    Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  flightId String
+  flight   Flight @relation(fields: [flightId], references: [id], onDelete: Cascade)
+  personId String
+  person   Person @relation(fields: [personId], references: [id])
+  role     String?
+  stageRef String?
+  relay    Int?
+  notes    String?
+  createdAt DateTime @default(now())
+
+  @@map("staff_assignments")
+}
+
+enum CommitmentStatusEnum {
+  COMMITTED
+  TENTATIVE
+  DECLINED
+  NO_RESPONSE
+}
+
+model CommitmentStatus {
+  id           String               @id @default(cuid())
+  eventId      String
+  event        Event                @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  personId     String
+  person       Person               @relation(fields: [personId], references: [id])
+  disciplineId String
+  discipline   Discipline           @relation(fields: [disciplineId], references: [id])
+  status       CommitmentStatusEnum @default(NO_RESPONSE)
+  updatedAt    DateTime             @updatedAt
+
+  @@unique([eventId, personId, disciplineId])
+  @@map("commitment_statuses")
+}
