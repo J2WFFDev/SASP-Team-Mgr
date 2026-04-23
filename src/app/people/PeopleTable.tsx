@@ -8,14 +8,17 @@ interface Person {
   fullName: string;
   role: string;
   status: string;
+  gender: string | null;
   team: string | null;
+  teamId: string | null;
+  teamRef: { id: string; name: string } | null;
   division: string | null;
   classLabel: string | null;
   email: string | null;
   _count: { athleteAssignments: number; staffAssignments: number; commitmentStatuses: number };
 }
 
-const ROLES = ["ATHLETE", "COACH", "RO", "VOLUNTEER", "STAFF"] as const;
+const ROLES = ["ATHLETE", "COACH", "RO", "VOLUNTEER", "STAFF", "PARENT"] as const;
 const STATUSES = ["ACTIVE", "INACTIVE", "ALUMNI"] as const;
 
 const ROLE_COLORS: Record<string, string> = {
@@ -24,6 +27,7 @@ const ROLE_COLORS: Record<string, string> = {
   RO:        "bg-yellow-100 text-yellow-700",
   VOLUNTEER: "bg-purple-100 text-purple-700",
   STAFF:     "bg-gray-100 text-gray-600",
+  PARENT:    "bg-pink-100 text-pink-700",
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -48,17 +52,21 @@ export default function PeopleTable({ people }: { people: Person[] }) {
 
   const teams = useMemo(() => {
     const set = new Set<string>();
-    people.forEach((p) => { if (p.team) set.add(p.team); });
+    people.forEach((p) => {
+      const name = p.teamRef?.name || p.team;
+      if (name) set.add(name);
+    });
     return Array.from(set).sort();
   }, [people]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
     return people.filter((p) => {
-      if (q && !p.fullName.toLowerCase().includes(q) && !(p.team ?? "").toLowerCase().includes(q)) return false;
+      const teamName = p.teamRef?.name || p.team || "";
+      if (q && !p.fullName.toLowerCase().includes(q) && !teamName.toLowerCase().includes(q)) return false;
       if (roleFilter && p.role !== roleFilter) return false;
       if (statusFilter && p.status !== statusFilter) return false;
-      if (teamFilter && p.team !== teamFilter) return false;
+      if (teamFilter && (p.teamRef?.name || p.team) !== teamFilter) return false;
       return true;
     });
   }, [people, search, roleFilter, statusFilter, teamFilter]);
@@ -74,7 +82,8 @@ export default function PeopleTable({ people }: { people: Person[] }) {
           email: person.email,
           role: person.role,
           status: newStatus,
-          team: person.team,
+          gender: person.gender,
+          teamId: person.teamId,
           division: person.division,
           classLabel: person.classLabel,
         }),
@@ -160,9 +169,9 @@ export default function PeopleTable({ people }: { people: Person[] }) {
                 <th className="text-left px-4 py-3 text-gray-600 font-medium">Name</th>
                 <th className="text-left px-4 py-3 text-gray-600 font-medium">Role</th>
                 <th className="text-left px-4 py-3 text-gray-600 font-medium">Status</th>
+                <th className="text-left px-4 py-3 text-gray-600 font-medium">Gender</th>
                 <th className="text-left px-4 py-3 text-gray-600 font-medium">Team</th>
-                <th className="text-left px-4 py-3 text-gray-600 font-medium">Division</th>
-                <th className="text-left px-4 py-3 text-gray-600 font-medium">Class</th>
+                <th className="text-left px-4 py-3 text-gray-600 font-medium">Div / Class</th>
                 <th className="text-left px-4 py-3 text-gray-600 font-medium">Email</th>
                 <th className="text-left px-4 py-3 text-gray-600 font-medium">Events</th>
                 <th className="px-4 py-3"></th>
@@ -187,9 +196,9 @@ export default function PeopleTable({ people }: { people: Person[] }) {
                       {p.status}
                     </button>
                   </td>
-                  <td className="px-4 py-2 text-gray-500">{p.team || "—"}</td>
-                  <td className="px-4 py-2 text-gray-500">{p.division || "—"}</td>
-                  <td className="px-4 py-2 text-gray-500">{p.classLabel || "—"}</td>
+                  <td className="px-4 py-2 text-gray-500">{p.gender || "—"}</td>
+                  <td className="px-4 py-2 text-gray-500">{p.teamRef?.name || p.team || "—"}</td>
+                  <td className="px-4 py-2 text-gray-500">{p.division || p.classLabel || "—"}</td>
                   <td className="px-4 py-2 text-gray-500">{p.email || "—"}</td>
                   <td className="px-4 py-2 text-gray-500">{p._count.commitmentStatuses}</td>
                   <td className="px-4 py-2">

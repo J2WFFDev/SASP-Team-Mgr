@@ -28,6 +28,26 @@ export default async function FlightDetailPage({
     orderBy: [{ relay: "asc" }, { role: "asc" }],
   });
 
+  // Get coach-athlete links to show relay staffing hints
+  const athleteIds = athleteAssignments.map((a) => a.personId);
+  const coachLinks = await prisma.personLink.findMany({
+    where: { athleteId: { in: athleteIds } },
+    include: { coach: { select: { id: true, fullName: true, role: true } } },
+  });
+
+  // Map relay → coaches (deduplicated)
+  const coachesByRelay = new Map<number | null, { id: string; fullName: string; role: string }[]>();
+  for (const a of athleteAssignments) {
+    const links = coachLinks.filter((l) => l.athleteId === a.personId);
+    if (links.length > 0) {
+      const existing = coachesByRelay.get(a.relay) ?? [];
+      for (const l of links) {
+        if (!existing.some((c) => c.id === l.coach.id)) existing.push(l.coach);
+      }
+      coachesByRelay.set(a.relay, existing);
+    }
+  }
+
   // Group by relay
   const relays = new Map<number | null, typeof athleteAssignments>();
   for (const a of athleteAssignments) {
@@ -50,8 +70,19 @@ export default async function FlightDetailPage({
 
       <h1 className="text-2xl font-bold text-gray-900 mb-1">{flight.name}</h1>
       {flight.startTime && (
-        <p className="text-gray-500 mb-6">{flight.startTime.toLocaleString()}</p>
+        <p className="text-gray-500 mb-4">{flight.startTime.toLocaleString()}</p>
       )}
+
+      <div className="flex gap-2 mb-6 no-print">
+        <a
+          href={`/events/${eventId}/print/flight/${flightId}`}
+          target="_blank"
+          rel="noreferrer"
+          className="bg-gray-800 text-white hover:bg-gray-900 px-4 py-2 rounded text-sm"
+        >
+          🖨 Print Flight Card
+        </a>
+      </div>
 
       {staffAssignments.length > 0 && (
         <div className="mb-8">
@@ -93,9 +124,16 @@ export default async function FlightDetailPage({
           {Array.from(relays.entries()).map(([relay, relayAssignments]) => (
             <div key={relay ?? "no-relay"}>
               {relay !== null && (
-                <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-2">
-                  Relay {relay}{relayAssignments[0]?.relayCode ? ` – ${relayAssignments[0].relayCode}` : ""}
-                </h3>
+                <div className="flex items-center gap-3 mb-2">
+                  <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                    Relay {relay}{relayAssignments[0]?.relayCode ? ` – ${relayAssignments[0].relayCode}` : ""}
+                  </h3>
+                  {coachesByRelay.has(relay) && (
+                    <span className="text-xs bg-blue-50 border border-blue-200 text-blue-700 rounded-full px-2 py-0.5">
+                      Coaches: {coachesByRelay.get(relay)!.map((c) => c.fullName).join(", ")}
+                    </span>
+                  )}
+                </div>
               )}
               <div className="bg-white border border-gray-200 rounded-lg overflow-x-auto">
                 <table className="w-full text-sm">

@@ -12,7 +12,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ per
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ personId: string }> }) {
   try {
     const { personId } = await params;
-    const { fullName, email, role, status, team, division, classLabel } = await req.json();
+    const { fullName, email, role, status, teamId, gender, division, classLabel } = await req.json();
     if (!fullName) return NextResponse.json({ error: "fullName is required" }, { status: 400 });
     if (role && !Object.values(PersonRole).includes(role)) {
       return NextResponse.json({ error: "Invalid role" }, { status: 400 });
@@ -20,6 +20,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ pers
     if (status && !Object.values(PersonStatus).includes(status)) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
+    const teamRecord = teamId
+      ? await prisma.team.findUnique({ where: { id: teamId }, select: { name: true } })
+      : null;
     const person = await prisma.person.update({
       where: { id: personId },
       data: {
@@ -27,7 +30,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ pers
         email: email || null,
         role: role || "ATHLETE",
         status: status || "ACTIVE",
-        team: team || null,
+        teamId: teamId || null,
+        team: teamRecord?.name || null,
+        gender: gender || null,
         division: division || null,
         classLabel: classLabel || null,
       },
