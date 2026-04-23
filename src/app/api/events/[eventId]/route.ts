@@ -26,7 +26,8 @@ export async function PATCH(
   }
 
   const { eventId } = await params;
-  const { flightsPerDay } = await req.json();
+  const body = await req.json();
+  const { flightsPerDay, name, description, startDate, endDate } = body;
 
   try {
     const event = await prisma.event.update({
@@ -35,9 +36,32 @@ export async function PATCH(
         ...(flightsPerDay !== undefined && {
           flightsPerDay: Math.min(10, Math.max(1, Number(flightsPerDay) || 1)),
         }),
+        ...(name !== undefined && { name }),
+        ...(description !== undefined && { description: description || null }),
+        ...(startDate !== undefined && { startDate: startDate ? new Date(startDate) : null }),
+        ...(endDate !== undefined && { endDate: endDate ? new Date(endDate) : null }),
       },
     });
     return NextResponse.json(event);
+  } catch (err: unknown) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : "Error" }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ eventId: string }> }
+) {
+  const session = await auth();
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (session.user.role !== "LEAGUE_ADMIN" && session.user.role !== "MATCH_DIRECTOR") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { eventId } = await params;
+  try {
+    await prisma.event.delete({ where: { id: eventId } });
+    return NextResponse.json({ ok: true });
   } catch (err: unknown) {
     return NextResponse.json({ error: err instanceof Error ? err.message : "Error" }, { status: 500 });
   }

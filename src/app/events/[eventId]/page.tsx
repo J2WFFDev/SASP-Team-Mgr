@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -14,23 +15,29 @@ const FORECAST_COLORS: Record<string, string> = {
 
 export default async function EventOverviewPage({ params }: { params: Promise<{ eventId: string }> }) {
   const { eventId } = await params;
-  const event = await prisma.event.findUnique({
-    where: { id: eventId },
-    include: {
-      _count: {
-        select: {
-          flights: true,
-          squads: true,
-          baySets: true,
-          athleteAssignments: true,
-          staffAssignments: true,
-          commitmentStatuses: true,
+  const [session, event] = await Promise.all([
+    auth(),
+    prisma.event.findUnique({
+      where: { id: eventId },
+      include: {
+        _count: {
+          select: {
+            flights: true,
+            squads: true,
+            baySets: true,
+            athleteAssignments: true,
+            staffAssignments: true,
+            commitmentStatuses: true,
+          },
         },
       },
-    },
-  });
+    }),
+  ]);
 
   if (!event) notFound();
+
+  const canManage =
+    session?.user?.role === "LEAGUE_ADMIN" || session?.user?.role === "MATCH_DIRECTOR";
 
   const personCount = await prisma.person.count({
     where: {
@@ -103,6 +110,16 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
         <Link href={`/events/${event.id}/flights`} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded text-sm font-medium">
           Flights
         </Link>
+        {canManage && (
+          <Link href={`/events/${event.id}/import`} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded text-sm font-medium">
+            Import
+          </Link>
+        )}
+        {canManage && (
+          <Link href={`/events/${event.id}/edit`} className="ml-auto bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded text-sm font-medium">
+            Edit Event
+          </Link>
+        )}
       </div>
     </div>
   );
