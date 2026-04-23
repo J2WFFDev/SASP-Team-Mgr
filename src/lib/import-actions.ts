@@ -6,6 +6,20 @@ import { PersonRole } from "@prisma/client";
 export async function importSquadding(eventId: string, raw: string) {
   const { rows } = parseTSV(raw);
 
+  type AssignmentData = {
+    eventId: string;
+    flightId: string;
+    stageId: string | null;
+    personId: string;
+    disciplineId: string | null;
+    squadId: string;
+    relay: number | null;
+    relayCode: string | null;
+    shootOrder: number | null;
+  };
+
+  const assignments: AssignmentData[] = [];
+
   for (const row of rows) {
     const squadNumStr = row["Squad"] || row["Squad #"] || row["SquadNum"] || "";
     const squadNum = parseInt(squadNumStr, 10);
@@ -70,20 +84,23 @@ export async function importSquadding(eventId: string, raw: string) {
     }
 
     if (flight) {
-      await prisma.athleteAssignment.create({
-        data: {
-          eventId,
-          flightId: flight.id,
-          stageId: stage?.id ?? null,
-          personId: person.id,
-          disciplineId: discipline?.id ?? null,
-          squadId: squad.id,
-          relay: relay,
-          relayCode: relayCode || null,
-          shootOrder: shootOrder,
-        },
+      assignments.push({
+        eventId,
+        flightId: flight.id,
+        stageId: stage?.id ?? null,
+        personId: person.id,
+        disciplineId: discipline?.id ?? null,
+        squadId: squad.id,
+        relay,
+        relayCode: relayCode || null,
+        shootOrder,
       });
     }
+  }
+
+  // Batch insert all assignments
+  if (assignments.length > 0) {
+    await prisma.athleteAssignment.createMany({ data: assignments });
   }
 
   return { ok: true };
@@ -92,6 +109,20 @@ export async function importSquadding(eventId: string, raw: string) {
 // ---- SCHEDULE TSV ----
 export async function importSchedule(eventId: string, raw: string) {
   const { rows } = parseTSV(raw);
+
+  type AssignmentData = {
+    eventId: string;
+    flightId: string;
+    stageId: string | null;
+    personId: string;
+    disciplineId: string | null;
+    squadId: string | null;
+    relay: number | null;
+    relayCode: string | null;
+    shootOrder: number | null;
+  };
+
+  const assignments: AssignmentData[] = [];
 
   for (const row of rows) {
     const flightName = row["Flight"] || row["Flight Name"] || "";
@@ -153,19 +184,22 @@ export async function importSchedule(eventId: string, raw: string) {
       });
     }
 
-    await prisma.athleteAssignment.create({
-      data: {
-        eventId,
-        flightId: flight.id,
-        stageId: stage?.id ?? null,
-        personId: person.id,
-        disciplineId: discipline?.id ?? null,
-        squadId: squad?.id ?? null,
-        relay,
-        relayCode: relayCode || null,
-        shootOrder,
-      },
+    assignments.push({
+      eventId,
+      flightId: flight.id,
+      stageId: stage?.id ?? null,
+      personId: person.id,
+      disciplineId: discipline?.id ?? null,
+      squadId: squad?.id ?? null,
+      relay,
+      relayCode: relayCode || null,
+      shootOrder,
     });
+  }
+
+  // Batch insert all assignments
+  if (assignments.length > 0) {
+    await prisma.athleteAssignment.createMany({ data: assignments });
   }
 
   return { ok: true };
@@ -180,6 +214,17 @@ export async function importAthScheduleIndy(eventId: string, raw: string) {
 // ---- VOL SCHEDULE INDY TSV ----
 export async function importVolScheduleIndy(eventId: string, raw: string) {
   const { rows } = parseTSV(raw);
+
+  type StaffData = {
+    eventId: string;
+    flightId: string;
+    personId: string;
+    role: string | null;
+    stageRef: string | null;
+    relay: number | null;
+  };
+
+  const staffAssignments: StaffData[] = [];
 
   for (const row of rows) {
     const flightName = row["Flight"] || row["Flight Name"] || "";
@@ -210,16 +255,19 @@ export async function importVolScheduleIndy(eventId: string, raw: string) {
       create: { fullName: personName, role: personRole },
     });
 
-    await prisma.staffAssignment.create({
-      data: {
-        eventId,
-        flightId: flight.id,
-        personId: person.id,
-        role: role || null,
-        stageRef: stageRef || null,
-        relay,
-      },
+    staffAssignments.push({
+      eventId,
+      flightId: flight.id,
+      personId: person.id,
+      role: role || null,
+      stageRef: stageRef || null,
+      relay,
     });
+  }
+
+  // Batch insert all staff assignments
+  if (staffAssignments.length > 0) {
+    await prisma.staffAssignment.createMany({ data: staffAssignments });
   }
 
   return { ok: true };
