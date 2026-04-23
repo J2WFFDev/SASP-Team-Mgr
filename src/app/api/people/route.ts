@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { fullName, email, role, status, teamId, division, classLabel } = await req.json();
+    const { fullName, email, role, status, teamId, gender, division, classLabel } = await req.json();
     if (!fullName) return NextResponse.json({ error: "fullName is required" }, { status: 400 });
     if (role && !Object.values(PersonRole).includes(role)) {
       return NextResponse.json({ error: "Invalid role" }, { status: 400 });
@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
         status: status || "ACTIVE",
         teamId: teamId || null,
         team: teamRecord?.name || null,
+        gender: gender || null,
         division: division || null,
         classLabel: classLabel || null,
       },

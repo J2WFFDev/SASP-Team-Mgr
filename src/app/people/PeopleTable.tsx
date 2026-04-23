@@ -8,6 +8,7 @@ interface Person {
   fullName: string;
   role: string;
   status: string;
+  gender: string | null;
   team: string | null;
   teamId: string | null;
   teamRef: { id: string; name: string } | null;
@@ -80,6 +81,7 @@ export default function PeopleTable({ people }: { people: Person[] }) {
           email: person.email,
           role: person.role,
           status: newStatus,
+          gender: person.gender,
           teamId: person.teamId,
           division: person.division,
           classLabel: person.classLabel,
@@ -166,9 +168,9 @@ export default function PeopleTable({ people }: { people: Person[] }) {
                 <th className="text-left px-4 py-3 text-gray-600 font-medium">Name</th>
                 <th className="text-left px-4 py-3 text-gray-600 font-medium">Role</th>
                 <th className="text-left px-4 py-3 text-gray-600 font-medium">Status</th>
+                <th className="text-left px-4 py-3 text-gray-600 font-medium">Gender</th>
                 <th className="text-left px-4 py-3 text-gray-600 font-medium">Team</th>
-                <th className="text-left px-4 py-3 text-gray-600 font-medium">Division</th>
-                <th className="text-left px-4 py-3 text-gray-600 font-medium">Class</th>
+                <th className="text-left px-4 py-3 text-gray-600 font-medium">Div / Class</th>
                 <th className="text-left px-4 py-3 text-gray-600 font-medium">Email</th>
                 <th className="text-left px-4 py-3 text-gray-600 font-medium">Events</th>
                 <th className="px-4 py-3"></th>
@@ -193,9 +195,9 @@ export default function PeopleTable({ people }: { people: Person[] }) {
                       {p.status}
                     </button>
                   </td>
+                  <td className="px-4 py-2 text-gray-500">{p.gender || "—"}</td>
                   <td className="px-4 py-2 text-gray-500">{p.teamRef?.name || p.team || "—"}</td>
-                  <td className="px-4 py-2 text-gray-500">{p.division || "—"}</td>
-                  <td className="px-4 py-2 text-gray-500">{p.classLabel || "—"}</td>
+                  <td className="px-4 py-2 text-gray-500">{p.division || p.classLabel || "—"}</td>
                   <td className="px-4 py-2 text-gray-500">{p.email || "—"}</td>
                   <td className="px-4 py-2 text-gray-500">{p._count.commitmentStatuses}</td>
                   <td className="px-4 py-2">

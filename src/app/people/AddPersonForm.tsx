@@ -4,6 +4,14 @@ import { useRouter } from "next/navigation";
 
 const ROLES = ["ATHLETE", "COACH", "RO", "VOLUNTEER", "STAFF"] as const;
 const STATUSES = ["ACTIVE", "INACTIVE", "ALUMNI"] as const;
+const GENDERS = ["Male", "Female", "Non-binary", "Prefer not to say"] as const;
+const DIVISION_CLASS_OPTIONS = [
+  "Senior / Varsity",
+  "Senior / Junior Varsity",
+  "Intermediate / Advanced",
+  "Intermediate / Entry",
+  "Rookie",
+] as const;
 
 interface Team {
   id: string;
@@ -16,9 +24,9 @@ export default function AddPersonForm({ teams }: { teams: Team[] }) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("ATHLETE");
   const [status, setStatus] = useState("ACTIVE");
+  const [gender, setGender] = useState("");
   const [teamId, setTeamId] = useState("");
-  const [division, setDivision] = useState("");
-  const [classLabel, setClassLabel] = useState("");
+  const [divisionClass, setDivisionClass] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -30,13 +38,28 @@ export default function AddPersonForm({ teams }: { teams: Team[] }) {
       const res = await fetch("/api/people", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullName, email, role, status, teamId: teamId || null, division, classLabel }),
+        body: JSON.stringify({
+          fullName,
+          email,
+          role,
+          status,
+          gender: gender || null,
+          teamId: teamId || null,
+          division: divisionClass || null,
+          classLabel: null,
+        }),
       });
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Failed to add person");
       }
-      setFullName(""); setEmail(""); setRole("ATHLETE"); setStatus("ACTIVE"); setTeamId(""); setDivision(""); setClassLabel("");
+      setFullName("");
+      setEmail("");
+      setRole("ATHLETE");
+      setStatus("ACTIVE");
+      setGender("");
+      setTeamId("");
+      setDivisionClass("");
       router.refresh();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Unknown error");
@@ -91,13 +114,15 @@ export default function AddPersonForm({ teams }: { teams: Team[] }) {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Division</label>
-          <input
-            value={division}
-            onChange={(e) => setDivision(e.target.value)}
+          <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+          <select
+            value={gender}
+            onChange={(e) => setGender(e.target.value)}
             className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="e.g. Open, Junior"
-          />
+          >
+            <option value="">— select —</option>
+            {GENDERS.map((g) => <option key={g} value={g}>{g}</option>)}
+          </select>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Team</label>
@@ -111,13 +136,15 @@ export default function AddPersonForm({ teams }: { teams: Team[] }) {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Class</label>
-          <input
-            value={classLabel}
-            onChange={(e) => setClassLabel(e.target.value)}
+          <label className="block text-sm font-medium text-gray-700 mb-1">Division / Class</label>
+          <select
+            value={divisionClass}
+            onChange={(e) => setDivisionClass(e.target.value)}
             className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="e.g. Master, Expert"
-          />
+          >
+            <option value="">— select —</option>
+            {DIVISION_CLASS_OPTIONS.map((d) => <option key={d} value={d}>{d}</option>)}
+          </select>
         </div>
       </div>
       <button

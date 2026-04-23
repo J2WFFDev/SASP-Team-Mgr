@@ -4,6 +4,14 @@ import { useRouter } from "next/navigation";
 
 const ROLES = ["ATHLETE", "COACH", "RO", "VOLUNTEER", "STAFF"] as const;
 const STATUSES = ["ACTIVE", "INACTIVE", "ALUMNI"] as const;
+const GENDERS = ["Male", "Female", "Non-binary", "Prefer not to say"] as const;
+const DIVISION_CLASS_OPTIONS = [
+  "Senior / Varsity",
+  "Senior / Junior Varsity",
+  "Intermediate / Advanced",
+  "Intermediate / Entry",
+  "Rookie",
+] as const;
 
 interface Team {
   id: string;
@@ -16,6 +24,7 @@ interface Person {
   email: string | null;
   role: string;
   status: string;
+  gender: string | null;
   teamId: string | null;
   division: string | null;
   classLabel: string | null;
@@ -27,9 +36,9 @@ export default function EditPersonForm({ person, teams }: { person: Person; team
   const [email, setEmail] = useState(person.email ?? "");
   const [role, setRole] = useState(person.role);
   const [status, setStatus] = useState(person.status);
+  const [gender, setGender] = useState(person.gender ?? "");
   const [teamId, setTeamId] = useState(person.teamId ?? "");
-  const [division, setDivision] = useState(person.division ?? "");
-  const [classLabel, setClassLabel] = useState(person.classLabel ?? "");
+  const [divisionClass, setDivisionClass] = useState(person.division ?? "");
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
@@ -42,7 +51,16 @@ export default function EditPersonForm({ person, teams }: { person: Person; team
       const res = await fetch(`/api/people/${person.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullName, email, role, status, teamId: teamId || null, division, classLabel }),
+        body: JSON.stringify({
+          fullName,
+          email,
+          role,
+          status,
+          gender: gender || null,
+          teamId: teamId || null,
+          division: divisionClass || null,
+          classLabel: null,
+        }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -58,7 +76,6 @@ export default function EditPersonForm({ person, teams }: { person: Person; team
   }
 
   async function handleDelete() {
-    if (!confirm(`Delete "${person.fullName}"? This cannot be undone.`)) return;
     setDeleting(true);
     setError("");
     try {
@@ -119,13 +136,15 @@ export default function EditPersonForm({ person, teams }: { person: Person; team
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Division</label>
-          <input
-            value={division}
-            onChange={(e) => setDivision(e.target.value)}
+          <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+          <select
+            value={gender}
+            onChange={(e) => setGender(e.target.value)}
             className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="e.g. Open, Junior"
-          />
+          >
+            <option value="">— select —</option>
+            {GENDERS.map((g) => <option key={g} value={g}>{g}</option>)}
+          </select>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Team</label>
@@ -139,13 +158,15 @@ export default function EditPersonForm({ person, teams }: { person: Person; team
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Class</label>
-          <input
-            value={classLabel}
-            onChange={(e) => setClassLabel(e.target.value)}
+          <label className="block text-sm font-medium text-gray-700 mb-1">Division / Class</label>
+          <select
+            value={divisionClass}
+            onChange={(e) => setDivisionClass(e.target.value)}
             className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="e.g. Master, Expert"
-          />
+          >
+            <option value="">— select —</option>
+            {DIVISION_CLASS_OPTIONS.map((d) => <option key={d} value={d}>{d}</option>)}
+          </select>
         </div>
       </div>
       <div className="mt-4 flex gap-3">

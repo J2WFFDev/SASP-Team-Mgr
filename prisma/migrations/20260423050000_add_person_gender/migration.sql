@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "persons" ADD COLUMN "gender" TEXT;

@@ -76,6 +76,7 @@ model Person {
   email      String?
   role       PersonRole   @default(ATHLETE)
   status     PersonStatus @default(ACTIVE)
+  gender     String?
   team       String?
   teamId     String?
   teamRef    Team?        @relation(fields: [teamId], references: [id])
