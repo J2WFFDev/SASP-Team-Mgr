@@ -17,7 +17,7 @@ function toCSV(rows: string[][], sep = ","): string {
     .join("\n");
 }
 
-export async function GET(req: NextRequest, { params }: { params: { eventId: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ eventId: string }> }) {
   const { searchParams } = req.nextUrl;
   const type = searchParams.get("type") || "schedule";
   const format = searchParams.get("format") || "csv";
@@ -25,14 +25,15 @@ export async function GET(req: NextRequest, { params }: { params: { eventId: str
   const sep = format === "tsv" ? "\t" : ",";
   const ext = format === "tsv" ? "tsv" : "csv";
 
-  const event = await prisma.event.findUnique({ where: { id: params.eventId } });
+  const { eventId } = await params;
+  const event = await prisma.event.findUnique({ where: { id: eventId } });
   if (!event) return NextResponse.json({ error: "Event not found" }, { status: 404 });
 
   let rows: string[][] = [];
 
   if (type === "schedule") {
     const assignments = await prisma.athleteAssignment.findMany({
-      where: { eventId: params.eventId },
+      where: { eventId: eventId },
       include: { flight: true, stage: true, person: true, discipline: true, squad: true },
       orderBy: [
         { flight: { flightOrder: "asc" } },
@@ -60,7 +61,7 @@ export async function GET(req: NextRequest, { params }: { params: { eventId: str
     const person = await prisma.person.findUnique({ where: { id: personId } });
     if (!person) return NextResponse.json({ error: "Person not found" }, { status: 404 });
     const assignments = await prisma.athleteAssignment.findMany({
-      where: { eventId: params.eventId, personId },
+      where: { eventId: eventId, personId },
       include: { flight: true, stage: true, discipline: true, squad: true },
       orderBy: [{ flight: { flightOrder: "asc" } }, { flight: { startTime: "asc" } }],
     });
@@ -81,7 +82,7 @@ export async function GET(req: NextRequest, { params }: { params: { eventId: str
     const person = await prisma.person.findUnique({ where: { id: personId } });
     if (!person) return NextResponse.json({ error: "Person not found" }, { status: 404 });
     const assignments = await prisma.staffAssignment.findMany({
-      where: { eventId: params.eventId, personId },
+      where: { eventId: eventId, personId },
       include: { flight: true },
       orderBy: [{ flight: { flightOrder: "asc" } }, { flight: { startTime: "asc" } }],
     });

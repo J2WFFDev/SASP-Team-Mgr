@@ -7,22 +7,23 @@ export const dynamic = "force-dynamic";
 export default async function FlightDetailPage({
   params,
 }: {
-  params: { eventId: string; flightId: string };
+  params: Promise<{ eventId: string; flightId: string }>;
 }) {
-  const event = await prisma.event.findUnique({ where: { id: params.eventId } });
+  const { eventId, flightId } = await params;
+  const event = await prisma.event.findUnique({ where: { id: eventId } });
   if (!event) notFound();
 
-  const flight = await prisma.flight.findUnique({ where: { id: params.flightId } });
+  const flight = await prisma.flight.findUnique({ where: { id: flightId } });
   if (!flight) notFound();
 
   const athleteAssignments = await prisma.athleteAssignment.findMany({
-    where: { flightId: params.flightId, eventId: params.eventId },
+    where: { flightId, eventId },
     include: { person: true, stage: true, discipline: true, squad: true },
     orderBy: [{ relay: "asc" }, { shootOrder: "asc" }, { person: { fullName: "asc" } }],
   });
 
   const staffAssignments = await prisma.staffAssignment.findMany({
-    where: { flightId: params.flightId, eventId: params.eventId },
+    where: { flightId: flightId, eventId: eventId },
     include: { person: true },
     orderBy: [{ relay: "asc" }, { role: "asc" }],
   });
@@ -40,9 +41,9 @@ export default async function FlightDetailPage({
       <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
         <Link href="/events" className="hover:underline">Events</Link>
         <span>/</span>
-        <Link href={`/events/${params.eventId}`} className="hover:underline">{event.name}</Link>
+        <Link href={`/events/${eventId}`} className="hover:underline">{event.name}</Link>
         <span>/</span>
-        <Link href={`/events/${params.eventId}/flights`} className="hover:underline">Flights</Link>
+        <Link href={`/events/${eventId}/flights`} className="hover:underline">Flights</Link>
         <span>/</span>
         <span>{flight.name}</span>
       </div>
@@ -69,7 +70,7 @@ export default async function FlightDetailPage({
                 {staffAssignments.map((s) => (
                   <tr key={s.id} className="hover:bg-gray-50">
                     <td className="px-4 py-2">
-                      <Link href={`/events/${params.eventId}/staff/${s.personId}`} className="text-blue-600 hover:underline">
+                      <Link href={`/events/${eventId}/staff/${s.personId}`} className="text-blue-600 hover:underline">
                         {s.person.fullName}
                       </Link>
                     </td>
@@ -112,7 +113,7 @@ export default async function FlightDetailPage({
                       <tr key={a.id} className="hover:bg-gray-50">
                         <td className="px-4 py-2 text-gray-500">{a.shootOrder ?? "—"}</td>
                         <td className="px-4 py-2">
-                          <Link href={`/events/${params.eventId}/athletes/${a.personId}`} className="text-blue-600 hover:underline">
+                          <Link href={`/events/${eventId}/athletes/${a.personId}`} className="text-blue-600 hover:underline">
                             {a.person.fullName}
                           </Link>
                         </td>

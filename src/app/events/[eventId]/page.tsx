@@ -4,9 +4,10 @@ import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function EventOverviewPage({ params }: { params: { eventId: string } }) {
+export default async function EventOverviewPage({ params }: { params: Promise<{ eventId: string }> }) {
+  const { eventId } = await params;
   const event = await prisma.event.findUnique({
-    where: { id: params.eventId },
+    where: { id: eventId },
     include: {
       _count: {
         select: {
@@ -24,8 +25,8 @@ export default async function EventOverviewPage({ params }: { params: { eventId:
   const personCount = await prisma.person.count({
     where: {
       OR: [
-        { athleteAssignments: { some: { eventId: params.eventId } } },
-        { staffAssignments: { some: { eventId: params.eventId } } },
+        { athleteAssignments: { some: { eventId } } },
+        { staffAssignments: { some: { eventId } } },
       ],
     },
   });

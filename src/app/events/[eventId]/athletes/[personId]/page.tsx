@@ -7,16 +7,17 @@ export const dynamic = "force-dynamic";
 export default async function AthleteSchedulePage({
   params,
 }: {
-  params: { eventId: string; personId: string };
+  params: Promise<{ eventId: string; personId: string }>;
 }) {
-  const event = await prisma.event.findUnique({ where: { id: params.eventId } });
+  const { eventId, personId } = await params;
+  const event = await prisma.event.findUnique({ where: { id: eventId } });
   if (!event) notFound();
 
-  const person = await prisma.person.findUnique({ where: { id: params.personId } });
+  const person = await prisma.person.findUnique({ where: { id: personId } });
   if (!person) notFound();
 
   const assignments = await prisma.athleteAssignment.findMany({
-    where: { eventId: params.eventId, personId: params.personId },
+    where: { eventId, personId },
     include: { flight: true, stage: true, discipline: true, squad: true },
     orderBy: [
       { flight: { flightOrder: "asc" } },
@@ -31,9 +32,9 @@ export default async function AthleteSchedulePage({
       <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
         <Link href="/events" className="hover:underline">Events</Link>
         <span>/</span>
-        <Link href={`/events/${params.eventId}`} className="hover:underline">{event.name}</Link>
+        <Link href={`/events/${eventId}`} className="hover:underline">{event.name}</Link>
         <span>/</span>
-        <Link href={`/events/${params.eventId}/athletes`} className="hover:underline">Athletes</Link>
+        <Link href={`/events/${eventId}/athletes`} className="hover:underline">Athletes</Link>
         <span>/</span>
         <span>{person.fullName}</span>
       </div>
@@ -44,7 +45,7 @@ export default async function AthleteSchedulePage({
           {person.division && <p className="text-sm text-gray-500 mt-1">Division: {person.division}</p>}
         </div>
         <a
-          href={`/api/events/${params.eventId}/export?type=athlete&personId=${params.personId}&format=csv`}
+          href={`/api/events/${eventId}/export?type=athlete&personId=${personId}&format=csv`}
           className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded text-sm"
         >
           Export CSV

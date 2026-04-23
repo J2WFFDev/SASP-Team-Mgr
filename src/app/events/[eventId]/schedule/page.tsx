@@ -4,12 +4,13 @@ import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function SchedulePage({ params }: { params: { eventId: string } }) {
-  const event = await prisma.event.findUnique({ where: { id: params.eventId } });
+export default async function SchedulePage({ params }: { params: Promise<{ eventId: string }> }) {
+  const { eventId } = await params;
+  const event = await prisma.event.findUnique({ where: { id: eventId } });
   if (!event) notFound();
 
   const assignments = await prisma.athleteAssignment.findMany({
-    where: { eventId: params.eventId },
+    where: { eventId: eventId },
     include: {
       flight: true,
       stage: true,
@@ -39,7 +40,7 @@ export default async function SchedulePage({ params }: { params: { eventId: stri
       <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
         <Link href="/events" className="hover:underline">Events</Link>
         <span>/</span>
-        <Link href={`/events/${params.eventId}`} className="hover:underline">{event.name}</Link>
+        <Link href={`/events/${eventId}`} className="hover:underline">{event.name}</Link>
         <span>/</span>
         <span>Schedule</span>
       </div>
@@ -48,13 +49,13 @@ export default async function SchedulePage({ params }: { params: { eventId: stri
         <h1 className="text-2xl font-bold text-gray-900">Master Schedule</h1>
         <div className="flex gap-2">
           <a
-            href={`/api/events/${params.eventId}/export?type=schedule&format=csv`}
+            href={`/api/events/${eventId}/export?type=schedule&format=csv`}
             className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded text-sm"
           >
             Export CSV
           </a>
           <a
-            href={`/api/events/${params.eventId}/export?type=schedule&format=tsv`}
+            href={`/api/events/${eventId}/export?type=schedule&format=tsv`}
             className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded text-sm"
           >
             Export TSV
@@ -64,7 +65,7 @@ export default async function SchedulePage({ params }: { params: { eventId: stri
 
       {assignments.length === 0 ? (
         <div className="bg-white border border-gray-200 rounded-lg p-8 text-center text-gray-500">
-          No assignments yet. <Link href={`/events/${params.eventId}/import`} className="text-blue-600 hover:underline">Import TSV data</Link> to get started.
+          No assignments yet. <Link href={`/events/${eventId}/import`} className="text-blue-600 hover:underline">Import TSV data</Link> to get started.
         </div>
       ) : (
         <div className="space-y-8">
@@ -77,7 +78,7 @@ export default async function SchedulePage({ params }: { params: { eventId: stri
                     {flightAssignments[0].flight.startTime.toLocaleString()}
                   </span>
                 )}
-                <Link href={`/events/${params.eventId}/flights/${flightAssignments[0]?.flightId}`} className="text-xs text-blue-600 hover:underline">
+                <Link href={`/events/${eventId}/flights/${flightAssignments[0]?.flightId}`} className="text-xs text-blue-600 hover:underline">
                   Detail →
                 </Link>
               </div>
@@ -97,7 +98,7 @@ export default async function SchedulePage({ params }: { params: { eventId: stri
                     {flightAssignments.map((a) => (
                       <tr key={a.id} className="hover:bg-gray-50">
                         <td className="px-4 py-2">
-                          <Link href={`/events/${params.eventId}/athletes/${a.personId}`} className="text-blue-600 hover:underline">
+                          <Link href={`/events/${eventId}/athletes/${a.personId}`} className="text-blue-600 hover:underline">
                             {a.person.fullName}
                           </Link>
                         </td>

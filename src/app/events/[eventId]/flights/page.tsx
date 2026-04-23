@@ -4,12 +4,13 @@ import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function FlightsPage({ params }: { params: { eventId: string } }) {
-  const event = await prisma.event.findUnique({ where: { id: params.eventId } });
+export default async function FlightsPage({ params }: { params: Promise<{ eventId: string }> }) {
+  const { eventId } = await params;
+  const event = await prisma.event.findUnique({ where: { id: eventId } });
   if (!event) notFound();
 
   const flights = await prisma.flight.findMany({
-    where: { eventId: params.eventId },
+    where: { eventId: eventId },
     orderBy: [{ flightOrder: "asc" }, { startTime: "asc" }],
     include: {
       _count: { select: { athleteAssignments: true, staffAssignments: true } },
@@ -21,7 +22,7 @@ export default async function FlightsPage({ params }: { params: { eventId: strin
       <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
         <Link href="/events" className="hover:underline">Events</Link>
         <span>/</span>
-        <Link href={`/events/${params.eventId}`} className="hover:underline">{event.name}</Link>
+        <Link href={`/events/${eventId}`} className="hover:underline">{event.name}</Link>
         <span>/</span>
         <span>Flights</span>
       </div>
@@ -50,7 +51,7 @@ export default async function FlightsPage({ params }: { params: { eventId: strin
                   <td className="px-4 py-2">{f._count.athleteAssignments}</td>
                   <td className="px-4 py-2">{f._count.staffAssignments}</td>
                   <td className="px-4 py-2">
-                    <Link href={`/events/${params.eventId}/flights/${f.id}`} className="text-blue-600 hover:underline text-xs">
+                    <Link href={`/events/${eventId}/flights/${f.id}`} className="text-blue-600 hover:underline text-xs">
                       Detail →
                     </Link>
                   </td>

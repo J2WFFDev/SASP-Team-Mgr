@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { importSquadding, importSchedule, importAthScheduleIndy, importVolScheduleIndy, importRef, clearEventData } from "@/lib/import-actions";
 import { prisma } from "@/lib/prisma";
 
-export async function POST(req: NextRequest, { params }: { params: { eventId: string } }) {
-  const { eventId } = params;
+export async function POST(req: NextRequest, { params }: { params: Promise<{ eventId: string }> }) {
+  const { eventId } = await params;
 
   // Verify event exists
   const event = await prisma.event.findUnique({ where: { id: eventId } });

@@ -4,13 +4,14 @@ import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function StaffPage({ params }: { params: { eventId: string } }) {
-  const event = await prisma.event.findUnique({ where: { id: params.eventId } });
+export default async function StaffPage({ params }: { params: Promise<{ eventId: string }> }) {
+  const { eventId } = await params;
+  const event = await prisma.event.findUnique({ where: { id: eventId } });
   if (!event) notFound();
 
   const persons = await prisma.person.findMany({
     where: {
-      staffAssignments: { some: { eventId: params.eventId } },
+      staffAssignments: { some: { eventId: eventId } },
     },
     orderBy: { fullName: "asc" },
     include: {
@@ -23,7 +24,7 @@ export default async function StaffPage({ params }: { params: { eventId: string 
       <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
         <Link href="/events" className="hover:underline">Events</Link>
         <span>/</span>
-        <Link href={`/events/${params.eventId}`} className="hover:underline">{event.name}</Link>
+        <Link href={`/events/${eventId}`} className="hover:underline">{event.name}</Link>
         <span>/</span>
         <span>Staff</span>
       </div>
@@ -31,7 +32,7 @@ export default async function StaffPage({ params }: { params: { eventId: string 
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Staff / Volunteers</h1>
 
       {persons.length === 0 ? (
-        <p className="text-gray-500">No staff found. <Link href={`/events/${params.eventId}/import`} className="text-blue-600 hover:underline">Import volunteer data</Link> first.</p>
+        <p className="text-gray-500">No staff found. <Link href={`/events/${eventId}/import`} className="text-blue-600 hover:underline">Import volunteer data</Link> first.</p>
       ) : (
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
           <table className="w-full text-sm">
@@ -50,7 +51,7 @@ export default async function StaffPage({ params }: { params: { eventId: string 
                   <td className="px-4 py-2 text-gray-500">{p.role}</td>
                   <td className="px-4 py-2 text-gray-500">{p._count.staffAssignments}</td>
                   <td className="px-4 py-2">
-                    <Link href={`/events/${params.eventId}/staff/${p.id}`} className="text-blue-600 hover:underline text-xs">
+                    <Link href={`/events/${eventId}/staff/${p.id}`} className="text-blue-600 hover:underline text-xs">
                       View Schedule →
                     </Link>
                   </td>

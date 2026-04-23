@@ -7,16 +7,17 @@ export const dynamic = "force-dynamic";
 export default async function StaffSchedulePage({
   params,
 }: {
-  params: { eventId: string; personId: string };
+  params: Promise<{ eventId: string; personId: string }>;
 }) {
-  const event = await prisma.event.findUnique({ where: { id: params.eventId } });
+  const { eventId, personId } = await params;
+  const event = await prisma.event.findUnique({ where: { id: eventId } });
   if (!event) notFound();
 
-  const person = await prisma.person.findUnique({ where: { id: params.personId } });
+  const person = await prisma.person.findUnique({ where: { id: personId } });
   if (!person) notFound();
 
   const assignments = await prisma.staffAssignment.findMany({
-    where: { eventId: params.eventId, personId: params.personId },
+    where: { eventId, personId },
     include: { flight: true },
     orderBy: [
       { flight: { flightOrder: "asc" } },
@@ -30,9 +31,9 @@ export default async function StaffSchedulePage({
       <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
         <Link href="/events" className="hover:underline">Events</Link>
         <span>/</span>
-        <Link href={`/events/${params.eventId}`} className="hover:underline">{event.name}</Link>
+        <Link href={`/events/${eventId}`} className="hover:underline">{event.name}</Link>
         <span>/</span>
-        <Link href={`/events/${params.eventId}/staff`} className="hover:underline">Staff</Link>
+        <Link href={`/events/${eventId}/staff`} className="hover:underline">Staff</Link>
         <span>/</span>
         <span>{person.fullName}</span>
       </div>
@@ -43,7 +44,7 @@ export default async function StaffSchedulePage({
           <p className="text-sm text-gray-500 mt-1">Role: {person.role}</p>
         </div>
         <a
-          href={`/api/events/${params.eventId}/export?type=staff&personId=${params.personId}&format=csv`}
+          href={`/api/events/${eventId}/export?type=staff&personId=${personId}&format=csv`}
           className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded text-sm"
         >
           Export CSV
