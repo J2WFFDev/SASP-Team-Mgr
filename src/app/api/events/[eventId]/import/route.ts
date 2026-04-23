@@ -17,7 +17,7 @@ export async function POST(req: NextRequest, { params }: { params: { eventId: st
       await clearEventData(eventId);
     }
 
-    let result;
+    let result: { ok: boolean };
     switch (type) {
       case "squadding":
         result = await importSquadding(eventId, tsv);
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest, { params }: { params: { eventId: st
         return NextResponse.json({ error: "Unknown import type" }, { status: 400 });
     }
 
-    return NextResponse.json({ ok: true, message: "Import completed successfully" });
+    return NextResponse.json({ ok: result.ok, message: "Import completed successfully" });
   } catch (err: unknown) {
     console.error("Import error:", err);
     return NextResponse.json({ error: err instanceof Error ? err.message : "Import failed" }, { status: 500 });
