@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -40,6 +40,16 @@ export default function RosterManager({ eventId, people, disciplines, initialCom
   const [status, setStatus] = useState("NO_RESPONSE");
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState("");
+
+  // Filter state
+  const [filterName, setFilterName] = useState("");
+  const [filterDisciplineId, setFilterDisciplineId] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+
+  // Bulk update state
+  const [bulkDisciplineId, setBulkDisciplineId] = useState("");
+  const [bulkStatus, setBulkStatus] = useState("COMMITTED");
+  const [bulking, setBulking] = useState(false);
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -98,6 +108,43 @@ export default function RosterManager({ eventId, people, disciplines, initialCom
       router.refresh();
     }
   }
+
+  async function handleBulkUpdate(e: React.FormEvent) {
+    e.preventDefault();
+    if (!bulkDisciplineId) return;
+    const targets = commitments.filter((c) => c.discipline.id === bulkDisciplineId);
+    if (targets.length === 0) return;
+    const disciplineName = disciplines.find((d) => d.id === bulkDisciplineId)?.name ?? bulkDisciplineId;
+    if (!confirm(`Set all ${targets.length} "${disciplineName}" entries to "${STATUS_LABELS[bulkStatus]}"?`)) return;
+    setBulking(true);
+    try {
+      await Promise.all(
+        targets.map((c) =>
+          fetch(`/api/events/${eventId}/commitment/${c.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: bulkStatus }),
+          })
+        )
+      );
+      setCommitments((prev) =>
+        prev.map((c) => (c.discipline.id === bulkDisciplineId ? { ...c, status: bulkStatus } : c))
+      );
+    } finally {
+      setBulking(false);
+    }
+  }
+
+  // Filtered view of commitments
+  const filtered = useMemo(() => {
+    const q = filterName.toLowerCase();
+    return commitments.filter((c) => {
+      if (q && !c.person.fullName.toLowerCase().includes(q)) return false;
+      if (filterDisciplineId && c.discipline.id !== filterDisciplineId) return false;
+      if (filterStatus && c.status !== filterStatus) return false;
+      return true;
+    });
+  }, [commitments, filterName, filterDisciplineId, filterStatus]);
 
   return (
     <div className="space-y-6">
@@ -168,11 +215,100 @@ export default function RosterManager({ eventId, people, disciplines, initialCom
         )}
       </form>
 
+      {/* Bulk status update */}
+      {commitments.length > 0 && disciplines.length > 0 && (
+        <form onSubmit={handleBulkUpdate} className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex flex-wrap gap-3 items-end">
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Bulk update — Discipline</label>
+            <select
+              value={bulkDisciplineId}
+              onChange={(e) => setBulkDisciplineId(e.target.value)}
+              className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">— pick discipline —</option>
+              {disciplines.map((d) => (
+                <option key={d.id} value={d.id}>{d.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Set all to</label>
+            <select
+              value={bulkStatus}
+              onChange={(e) => setBulkStatus(e.target.value)}
+              className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {Object.entries(STATUS_LABELS).map(([val, label]) => (
+                <option key={val} value={val}>{label}</option>
+              ))}
+            </select>
+          </div>
+          <button
+            type="submit"
+            disabled={bulking || !bulkDisciplineId}
+            className="bg-gray-700 text-white px-4 py-1.5 rounded hover:bg-gray-800 text-sm disabled:opacity-50"
+          >
+            {bulking ? "Updating…" : "Apply to all"}
+          </button>
+        </form>
+      )}
+
       {/* Roster table */}
       {commitments.length === 0 ? (
         <p className="text-gray-500 text-sm">No roster entries yet. Add one above.</p>
       ) : (
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          {/* Filter bar */}
+          <div className="flex flex-wrap gap-3 items-end p-4 border-b bg-gray-50">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Search person</label>
+              <input
+                type="search"
+                value={filterName}
+                onChange={(e) => setFilterName(e.target.value)}
+                placeholder="Name…"
+                className="border border-gray-300 rounded px-3 py-1.5 text-sm w-44 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Discipline</label>
+              <select
+                value={filterDisciplineId}
+                onChange={(e) => setFilterDisciplineId(e.target.value)}
+                className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All disciplines</option>
+                {disciplines.map((d) => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Status</label>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All statuses</option>
+                {Object.entries(STATUS_LABELS).map(([val, label]) => (
+                  <option key={val} value={val}>{label}</option>
+                ))}
+              </select>
+            </div>
+            {(filterName || filterDisciplineId || filterStatus) && (
+              <button
+                onClick={() => { setFilterName(""); setFilterDisciplineId(""); setFilterStatus(""); }}
+                className="text-xs text-gray-500 hover:text-gray-700 mt-4"
+              >
+                Clear filters
+              </button>
+            )}
+            <span className="text-xs text-gray-400 mt-4 ml-auto">
+              {filtered.length} of {commitments.length} shown
+            </span>
+          </div>
+
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
@@ -185,7 +321,11 @@ export default function RosterManager({ eventId, people, disciplines, initialCom
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {commitments.map((c) => (
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-4 text-gray-400 text-center text-sm">No entries match the current filters.</td>
+                </tr>
+              ) : filtered.map((c) => (
                 <tr key={c.id} className="hover:bg-gray-50">
                   <td className="px-4 py-2 font-medium text-gray-800">{c.person.fullName}</td>
                   <td className="px-4 py-2">

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import AddDisciplineForm from "./AddDisciplineForm";
-import DeleteDisciplineButton from "./DeleteDisciplineButton";
+import DisciplineRow from "./DisciplineRow";
 
 export const dynamic = "force-dynamic";
 
@@ -39,16 +39,15 @@ export default async function DisciplinesPage() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {disciplines.map((d) => (
-                  <tr key={d.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-2 font-medium text-gray-800">{d.name}</td>
-                    <td className="px-4 py-2 text-gray-500">{d.shortName || "—"}</td>
-                    <td className="px-4 py-2 text-gray-500">{d.gunType || "—"}</td>
-                    <td className="px-4 py-2 text-gray-500">{d._count.athleteAssignments}</td>
-                    <td className="px-4 py-2 text-gray-500">{d._count.commitmentStatuses}</td>
-                    <td className="px-4 py-2 text-right">
-                      <DeleteDisciplineButton id={d.id} name={d.name} />
-                    </td>
-                  </tr>
+                  <DisciplineRow
+                    key={d.id}
+                    id={d.id}
+                    name={d.name}
+                    shortName={d.shortName}
+                    gunType={d.gunType}
+                    assignmentCount={d._count.athleteAssignments}
+                    commitmentCount={d._count.commitmentStatuses}
+                  />
                 ))}
               </tbody>
             </table>
