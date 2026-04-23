@@ -14,13 +14,12 @@ export default async function EditEventPage({
   const session = await auth();
   if (!session?.user) redirect("/login");
 
+  const { eventId } = await params;
   const role = session.user.role;
   if (role !== "LEAGUE_ADMIN" && role !== "MATCH_DIRECTOR") {
-    const { eventId } = await params;
     redirect(`/events/${eventId}`);
   }
 
-  const { eventId } = await params;
   const event = await prisma.event.findUnique({ where: { id: eventId } });
   if (!event) notFound();
 

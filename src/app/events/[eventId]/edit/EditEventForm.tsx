@@ -26,6 +26,10 @@ export default function EditEventForm({ event }: { event: Event }) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (startDate && endDate && endDate < startDate) {
+      setError("End date cannot be before start date.");
+      return;
+    }
     setLoading(true);
     setError("");
     try {
