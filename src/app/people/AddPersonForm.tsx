@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 
 const ROLES = ["ATHLETE", "COACH", "RO", "VOLUNTEER", "STAFF", "PARENT"] as const;
 const STATUSES = ["ACTIVE", "INACTIVE", "ALUMNI"] as const;
-const GENDERS = ["Male", "Female", "Non-binary", "Prefer not to say"] as const;
+const GENDERS = ["Male", "Female"] as const;
 const DIVISION_CLASS_OPTIONS = [
   "Senior / Varsity",
   "Senior / Junior Varsity",
