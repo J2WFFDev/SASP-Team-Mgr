@@ -8,10 +8,10 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, gunType } = await req.json();
+    const { name, shortName, gunType } = await req.json();
     if (!name) return NextResponse.json({ error: "name is required" }, { status: 400 });
     const discipline = await prisma.discipline.create({
-      data: { name, gunType: gunType || null },
+      data: { name, shortName: shortName || null, gunType: gunType || null },
     });
     return NextResponse.json(discipline, { status: 201 });
   } catch (err: unknown) {

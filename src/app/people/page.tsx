@@ -33,6 +33,7 @@ export default async function PeoplePage() {
                 <tr>
                   <th className="text-left px-4 py-3 text-gray-600 font-medium">Name</th>
                   <th className="text-left px-4 py-3 text-gray-600 font-medium">Role</th>
+                  <th className="text-left px-4 py-3 text-gray-600 font-medium">Team</th>
                   <th className="text-left px-4 py-3 text-gray-600 font-medium">Division</th>
                   <th className="text-left px-4 py-3 text-gray-600 font-medium">Class</th>
                   <th className="text-left px-4 py-3 text-gray-600 font-medium">Email</th>
@@ -54,6 +55,7 @@ export default async function PeoplePage() {
                         {p.role}
                       </span>
                     </td>
+                    <td className="px-4 py-2 text-gray-500">{p.team || "—"}</td>
                     <td className="px-4 py-2 text-gray-500">{p.division || "—"}</td>
                     <td className="px-4 py-2 text-gray-500">{p.classLabel || "—"}</td>
                     <td className="px-4 py-2 text-gray-500">{p.email || "—"}</td>

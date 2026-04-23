@@ -30,6 +30,7 @@ export default async function DisciplinesPage() {
               <thead className="bg-gray-50 border-b">
                 <tr>
                   <th className="text-left px-4 py-3 text-gray-600 font-medium">Name</th>
+                  <th className="text-left px-4 py-3 text-gray-600 font-medium">Short Name</th>
                   <th className="text-left px-4 py-3 text-gray-600 font-medium">Gun Type</th>
                   <th className="text-left px-4 py-3 text-gray-600 font-medium">Assignments</th>
                   <th className="text-left px-4 py-3 text-gray-600 font-medium">Commitments</th>
@@ -40,6 +41,7 @@ export default async function DisciplinesPage() {
                 {disciplines.map((d) => (
                   <tr key={d.id} className="hover:bg-gray-50">
                     <td className="px-4 py-2 font-medium text-gray-800">{d.name}</td>
+                    <td className="px-4 py-2 text-gray-500">{d.shortName || "—"}</td>
                     <td className="px-4 py-2 text-gray-500">{d.gunType || "—"}</td>
                     <td className="px-4 py-2 text-gray-500">{d._count.athleteAssignments}</td>
                     <td className="px-4 py-2 text-gray-500">{d._count.commitmentStatuses}</td>
