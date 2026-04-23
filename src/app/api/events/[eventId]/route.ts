@@ -30,6 +30,13 @@ export async function PATCH(
   const { flightsPerDay, name, description, startDate, endDate } = body;
 
   try {
+    const parsedStart = startDate ? new Date(startDate) : undefined;
+    const parsedEnd = endDate ? new Date(endDate) : undefined;
+
+    if (parsedStart && parsedEnd && parsedEnd < parsedStart) {
+      return NextResponse.json({ error: "End date cannot be before start date." }, { status: 400 });
+    }
+
     const event = await prisma.event.update({
       where: { id: eventId },
       data: {
@@ -38,8 +45,8 @@ export async function PATCH(
         }),
         ...(name !== undefined && { name }),
         ...(description !== undefined && { description: description || null }),
-        ...(startDate !== undefined && { startDate: startDate ? new Date(startDate) : null }),
-        ...(endDate !== undefined && { endDate: endDate ? new Date(endDate) : null }),
+        ...(startDate !== undefined && { startDate: parsedStart ?? null }),
+        ...(endDate !== undefined && { endDate: parsedEnd ?? null }),
       },
     });
     return NextResponse.json(event);
