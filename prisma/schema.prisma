@@ -99,6 +99,7 @@ model Person {
   commitmentStatuses CommitmentStatus[]
   coachLinks         PersonLink[]        @relation("CoachLinks")
   athleteLinks       PersonLink[]        @relation("AthleteLinks")
+  athleteNotes       AthleteNote[]
 
   @@map("persons")
 }
@@ -150,8 +151,9 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts Account[]
-  sessions Session[]
+  accounts     Account[]
+  sessions     Session[]
+  athleteNotes AthleteNote[]
 
   @@map("users")
 }
@@ -301,4 +303,18 @@ model BaySet {
   baySetOrder Int    @default(0)
 
   @@map("bay_sets")
+}
+
+// Coach notes on athletes, scoped to the author's team.
+model AthleteNote {
+  id        String   @id @default(cuid())
+  personId  String
+  person    Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  teamId    String?
+  content   String
+  createdAt DateTime @default(now())
+
+  @@map("athlete_notes")
 }

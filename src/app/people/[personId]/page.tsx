@@ -1,14 +1,17 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { auth } from "@/auth";
 import EditPersonForm from "./EditPersonForm";
 import PersonLinksSection from "./PersonLinksSection";
+import AthleteNotesSection from "./AthleteNotesSection";
 
 export const dynamic = "force-dynamic";
 
 export default async function EditPersonPage({ params }: { params: Promise<{ personId: string }> }) {
   const { personId } = await params;
-  const [person, teams, allPeople, coachLinks, athleteLinks] = await Promise.all([
+  const session = await auth();
+  const [person, teams, allPeople, coachLinks, athleteLinks, notes] = await Promise.all([
     prisma.person.findUnique({
       where: { id: personId },
       include: {
@@ -29,6 +32,14 @@ export default async function EditPersonPage({ params }: { params: Promise<{ per
       where: { athleteId: personId },
       include: { coach: { select: { id: true, fullName: true, role: true } } },
       orderBy: { coach: { fullName: "asc" } },
+    }),
+    prisma.athleteNote.findMany({
+      where: {
+        personId,
+        teamId: session?.user?.teamId ?? undefined,
+      },
+      include: { author: { select: { id: true, name: true } } },
+      orderBy: { createdAt: "desc" },
     }),
   ]);
   if (!person) notFound();
@@ -67,6 +78,20 @@ export default async function EditPersonPage({ params }: { params: Promise<{ per
         athleteLinks={athleteLinks.map((l) => ({ id: l.id, coach: l.coach }))}
         allPeople={allPeople}
       />
+
+      {session?.user && (
+        <AthleteNotesSection
+          personId={personId}
+          currentUserId={session.user.id}
+          currentUserRole={session.user.role}
+          initialNotes={notes.map((n) => ({
+            id: n.id,
+            content: n.content,
+            createdAt: n.createdAt.toISOString(),
+            author: { id: n.author.id, name: n.author.name },
+          }))}
+        />
+      )}
 
       {person._count.athleteAssignments + person._count.staffAssignments > 0 && (
         <p className="mt-4 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-3 py-2">
