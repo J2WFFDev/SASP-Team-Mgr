@@ -25,12 +25,14 @@ model Event {
   startDate      DateTime?
   endDate        DateTime?
   forecastStatus ForecastStatus @default(DRAFT)
+  flightsPerDay  Int            @default(1)
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
   flights             Flight[]
   stages              Stage[]
   squads              Squad[]
+  baySets             BaySet[]
   athleteAssignments  AthleteAssignment[]
   staffAssignments    StaffAssignment[]
   commitmentStatuses  CommitmentStatus[]
@@ -107,6 +109,7 @@ enum PersonRole {
   RO
   VOLUNTEER
   STAFF
+  PARENT
 }
 
 enum PersonStatus {
@@ -280,4 +283,22 @@ model PersonLink {
 
   @@unique([coachId, athleteId])
   @@map("person_links")
+}
+
+// Bay set = a named group of 4 SASP stages (bays) at a venue.
+// slotsPerBay defines how many shooting slots are in each of the 4 bays.
+// stage1 is always Go-Fast; stage2/3/4 are picked from fixed SASP option groups.
+model BaySet {
+  id          String @id @default(cuid())
+  eventId     String
+  event       Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  label       String?
+  slotsPerBay Int    @default(16)
+  stage1      String @default("Go-Fast")
+  stage2      String?
+  stage3      String?
+  stage4      String?
+  baySetOrder Int    @default(0)
+
+  @@map("bay_sets")
 }

@@ -18,7 +18,7 @@ interface Person {
   _count: { athleteAssignments: number; staffAssignments: number; commitmentStatuses: number };
 }
 
-const ROLES = ["ATHLETE", "COACH", "RO", "VOLUNTEER", "STAFF"] as const;
+const ROLES = ["ATHLETE", "COACH", "RO", "VOLUNTEER", "STAFF", "PARENT"] as const;
 const STATUSES = ["ACTIVE", "INACTIVE", "ALUMNI"] as const;
 
 const ROLE_COLORS: Record<string, string> = {
@@ -27,6 +27,7 @@ const ROLE_COLORS: Record<string, string> = {
   RO:        "bg-yellow-100 text-yellow-700",
   VOLUNTEER: "bg-purple-100 text-purple-700",
   STAFF:     "bg-gray-100 text-gray-600",
+  PARENT:    "bg-pink-100 text-pink-700",
 };
 
 const STATUS_COLORS: Record<string, string> = {

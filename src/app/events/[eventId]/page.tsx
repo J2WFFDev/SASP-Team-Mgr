@@ -21,6 +21,7 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
         select: {
           flights: true,
           squads: true,
+          baySets: true,
           athleteAssignments: true,
           staffAssignments: true,
           commitmentStatuses: true,
@@ -65,8 +66,10 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
         {[
           { label: "Flights", value: event._count.flights },
           { label: "Squads", value: event._count.squads },
+          { label: "Bay Sets", value: event._count.baySets },
           { label: "Persons", value: personCount },
           { label: "Forecast Entries", value: event._count.commitmentStatuses },
+          { label: "Flights / Day", value: event.flightsPerDay },
         ].map((s) => (
           <div key={s.label} className="bg-white border border-gray-200 rounded-lg p-4 text-center">
             <div className="text-2xl font-bold text-blue-700">{s.value}</div>
@@ -81,6 +84,9 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
         </Link>
         <Link href={`/events/${event.id}/squads`} className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 text-sm font-medium">
           Squad Planner
+        </Link>
+        <Link href={`/events/${event.id}/capacity`} className="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 text-sm font-medium">
+          Capacity
         </Link>
         <Link href={`/events/${event.id}/roster`} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded text-sm font-medium">
           Roster (All)

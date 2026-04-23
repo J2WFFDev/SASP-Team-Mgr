@@ -46,7 +46,7 @@ export default function PersonLinksSection({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const isCoachRole = ["COACH", "RO", "VOLUNTEER", "STAFF"].includes(personRole);
+  const isCoachRole = ["COACH", "RO", "VOLUNTEER", "STAFF", "PARENT"].includes(personRole);
   const isAthleteRole = personRole === "ATHLETE";
 
   // People available to link as athletes (exclude self and already-linked)
