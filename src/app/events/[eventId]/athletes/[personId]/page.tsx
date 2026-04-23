@@ -44,12 +44,22 @@ export default async function AthleteSchedulePage({
           <h1 className="text-2xl font-bold text-gray-900">{person.fullName}</h1>
           {person.division && <p className="text-sm text-gray-500 mt-1">Division: {person.division}</p>}
         </div>
-        <a
-          href={`/api/events/${eventId}/export?type=athlete&personId=${personId}&format=csv`}
-          className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded text-sm"
-        >
-          Export CSV
-        </a>
+        <div className="flex gap-2">
+          <a
+            href={`/events/${eventId}/print/athlete/${personId}`}
+            target="_blank"
+            rel="noreferrer"
+            className="bg-gray-800 text-white hover:bg-gray-900 px-4 py-2 rounded text-sm"
+          >
+            🖨 Print Card
+          </a>
+          <a
+            href={`/api/events/${eventId}/export?type=athlete&personId=${personId}&format=csv`}
+            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded text-sm"
+          >
+            Export CSV
+          </a>
+        </div>
       </div>
 
       {assignments.length === 0 ? (

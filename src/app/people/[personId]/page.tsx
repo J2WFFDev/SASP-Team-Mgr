@@ -2,12 +2,13 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import EditPersonForm from "./EditPersonForm";
+import PersonLinksSection from "./PersonLinksSection";
 
 export const dynamic = "force-dynamic";
 
 export default async function EditPersonPage({ params }: { params: Promise<{ personId: string }> }) {
   const { personId } = await params;
-  const [person, teams] = await Promise.all([
+  const [person, teams, allPeople, coachLinks, athleteLinks] = await Promise.all([
     prisma.person.findUnique({
       where: { id: personId },
       include: {
@@ -15,6 +16,20 @@ export default async function EditPersonPage({ params }: { params: Promise<{ per
       },
     }),
     prisma.team.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    prisma.person.findMany({
+      orderBy: { fullName: "asc" },
+      select: { id: true, fullName: true, role: true },
+    }),
+    prisma.personLink.findMany({
+      where: { coachId: personId },
+      include: { athlete: { select: { id: true, fullName: true, division: true, team: true } } },
+      orderBy: { athlete: { fullName: "asc" } },
+    }),
+    prisma.personLink.findMany({
+      where: { athleteId: personId },
+      include: { coach: { select: { id: true, fullName: true, role: true } } },
+      orderBy: { coach: { fullName: "asc" } },
+    }),
   ]);
   if (!person) notFound();
 
@@ -44,6 +59,14 @@ export default async function EditPersonPage({ params }: { params: Promise<{ per
       </div>
 
       <EditPersonForm person={person} teams={teams} />
+
+      <PersonLinksSection
+        personId={personId}
+        personRole={person.role}
+        coachLinks={coachLinks.map((l) => ({ id: l.id, athlete: l.athlete }))}
+        athleteLinks={athleteLinks.map((l) => ({ id: l.id, coach: l.coach }))}
+        allPeople={allPeople}
+      />
 
       {person._count.athleteAssignments + person._count.staffAssignments > 0 && (
         <p className="mt-4 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-3 py-2">

@@ -95,6 +95,8 @@ model Person {
   athleteAssignments AthleteAssignment[]
   staffAssignments   StaffAssignment[]
   commitmentStatuses CommitmentStatus[]
+  coachLinks         PersonLink[]        @relation("CoachLinks")
+  athleteLinks       PersonLink[]        @relation("AthleteLinks")
 
   @@map("persons")
 }
@@ -266,4 +268,16 @@ model CommitmentStatus {
 
   @@unique([eventId, personId, disciplineId])
   @@map("commitment_statuses")
+}
+
+model PersonLink {
+  id        String @id @default(cuid())
+  coachId   String
+  coach     Person @relation("CoachLinks", fields: [coachId], references: [id], onDelete: Cascade)
+  athleteId String
+  athlete   Person @relation("AthleteLinks", fields: [athleteId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([coachId, athleteId])
+  @@map("person_links")
 }

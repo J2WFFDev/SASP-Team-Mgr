@@ -49,6 +49,14 @@ export default async function SchedulePage({ params }: { params: Promise<{ event
         <h1 className="text-2xl font-bold text-gray-900">Master Schedule</h1>
         <div className="flex gap-2">
           <a
+            href={`/events/${eventId}/print/schedule`}
+            target="_blank"
+            rel="noreferrer"
+            className="bg-gray-800 text-white hover:bg-gray-900 px-4 py-2 rounded text-sm"
+          >
+            🖨 Print View
+          </a>
+          <a
             href={`/api/events/${eventId}/export?type=schedule&format=csv`}
             className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded text-sm"
           >
