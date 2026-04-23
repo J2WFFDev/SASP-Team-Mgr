@@ -17,6 +17,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </Link>
           <nav className="flex gap-4 text-sm">
             <Link href="/events" className="hover:text-blue-200">Events</Link>
+            <Link href="/people" className="hover:text-blue-200">People</Link>
+            <Link href="/disciplines" className="hover:text-blue-200">Disciplines</Link>
           </nav>
         </header>
         <main className="min-h-screen bg-gray-50">{children}</main>

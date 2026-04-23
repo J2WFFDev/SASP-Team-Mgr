@@ -27,4 +27,4 @@ yarn-debug.log*
 yarn-error.log*
 
 # prisma
-prisma/migrations/
+# prisma/migrations/ is intentionally tracked so Vercel can run `prisma migrate deploy`
