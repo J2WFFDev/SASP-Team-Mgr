@@ -14,8 +14,18 @@ export default function HomePage() {
         >
           View Events
         </Link>
+        <Link
+          href="/people"
+          className="bg-white border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 font-medium"
+        >
+          Manage People
+        </Link>
       </div>
       <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="font-semibold text-gray-800 mb-2">👥 People & Roster</h2>
+          <p className="text-sm text-gray-500">Add athletes, coaches, and staff. Manage event rosters and commitment status.</p>
+        </div>
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="font-semibold text-gray-800 mb-2">📅 Master Schedule</h2>
           <p className="text-sm text-gray-500">View all flights, stages, and athlete assignments.</p>

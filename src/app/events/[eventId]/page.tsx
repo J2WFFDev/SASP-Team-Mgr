@@ -62,7 +62,10 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <Link href={`/events/${event.id}/import`} className="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800 text-sm font-medium">
+        <Link href={`/events/${event.id}/roster`} className="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800 text-sm font-medium">
+          Roster
+        </Link>
+        <Link href={`/events/${event.id}/import`} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded text-sm font-medium">
           Import TSV Data
         </Link>
         <Link href={`/events/${event.id}/schedule`} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded text-sm font-medium">
