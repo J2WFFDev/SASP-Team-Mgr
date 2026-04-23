@@ -244,9 +244,10 @@ export async function importVolScheduleIndy(eventId: string, raw: string) {
       create: { eventId, name: flightName, startTime: flightTime },
     });
 
+    const roleLower = role.toLowerCase().trim();
     const personRole: PersonRole =
-      role.toLowerCase().includes("coach") ? PersonRole.COACH :
-      role.toLowerCase().includes("ro") ? PersonRole.RO :
+      /\bcoach\b/.test(roleLower) ? PersonRole.COACH :
+      /\bro\b/.test(roleLower) ? PersonRole.RO :
       PersonRole.VOLUNTEER;
 
     const person = await prisma.person.upsert({
