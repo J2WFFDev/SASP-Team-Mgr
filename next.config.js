@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Prevent Next.js from bundling Prisma's native binaries — they must remain external
-  serverExternalPackages: ["@prisma/client", "prisma"],
+  // Prevent Next.js from bundling server-only native modules
+  serverExternalPackages: ["@prisma/client", "prisma", "bcryptjs"],
 };
 module.exports = nextConfig;

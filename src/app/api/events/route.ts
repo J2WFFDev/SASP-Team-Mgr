@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 
 export async function GET() {
   const events = await prisma.event.findMany({ orderBy: { startDate: "asc" } });
@@ -7,6 +8,11 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const session = await auth();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (session.user.role !== "LEAGUE_ADMIN" && session.user.role !== "MATCH_DIRECTOR") {
+    return NextResponse.json({ error: "Forbidden: only Match Directors and League Admins may create events" }, { status: 403 });
+  }
   try {
     const { name, description, startDate, endDate } = await req.json();
     if (!name) return NextResponse.json({ error: "name is required" }, { status: 400 });

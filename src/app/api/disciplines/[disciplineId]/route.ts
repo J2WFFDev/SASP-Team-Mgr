@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ disciplineId: string }> }) {
+  const session = await auth();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (session.user.role !== "LEAGUE_ADMIN") {
+    return NextResponse.json({ error: "Forbidden: only League Admins may manage disciplines" }, { status: 403 });
+  }
   try {
     const { disciplineId } = await params;
     const { name, shortName, gunType } = await req.json();
@@ -24,6 +30,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ disc
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ disciplineId: string }> }) {
+  const session = await auth();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (session.user.role !== "LEAGUE_ADMIN") {
+    return NextResponse.json({ error: "Forbidden: only League Admins may manage disciplines" }, { status: 403 });
+  }
   try {
     const { disciplineId } = await params;
     const commitments = await prisma.commitmentStatus.count({ where: { disciplineId } });
