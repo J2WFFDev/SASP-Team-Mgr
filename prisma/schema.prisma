@@ -71,13 +71,14 @@ model Discipline {
 }
 
 model Person {
-  id         String     @id @default(cuid())
-  fullName   String     @unique
+  id         String       @id @default(cuid())
+  fullName   String       @unique
   email      String?
-  role       PersonRole @default(ATHLETE)
+  role       PersonRole   @default(ATHLETE)
+  status     PersonStatus @default(ACTIVE)
   team       String?
   teamId     String?
-  teamRef    Team?      @relation(fields: [teamId], references: [id])
+  teamRef    Team?        @relation(fields: [teamId], references: [id])
   division   String?
   classLabel String?
 
@@ -94,6 +95,12 @@ enum PersonRole {
   RO
   VOLUNTEER
   STAFF
+}
+
+enum PersonStatus {
+  ACTIVE
+  INACTIVE
+  ALUMNI
 }
 
 enum UserRole {

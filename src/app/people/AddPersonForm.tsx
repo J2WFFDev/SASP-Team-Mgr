@@ -3,12 +3,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 const ROLES = ["ATHLETE", "COACH", "RO", "VOLUNTEER", "STAFF"] as const;
+const STATUSES = ["ACTIVE", "INACTIVE", "ALUMNI"] as const;
 
 export default function AddPersonForm() {
   const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("ATHLETE");
+  const [status, setStatus] = useState("ACTIVE");
   const [team, setTeam] = useState("");
   const [division, setDivision] = useState("");
   const [classLabel, setClassLabel] = useState("");
@@ -23,13 +25,13 @@ export default function AddPersonForm() {
       const res = await fetch("/api/people", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullName, email, role, team, division, classLabel }),
+        body: JSON.stringify({ fullName, email, role, status, team, division, classLabel }),
       });
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Failed to add person");
       }
-      setFullName(""); setEmail(""); setRole("ATHLETE"); setTeam(""); setDivision(""); setClassLabel("");
+      setFullName(""); setEmail(""); setRole("ATHLETE"); setStatus("ACTIVE"); setTeam(""); setDivision(""); setClassLabel("");
       router.refresh();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Unknown error");
@@ -70,6 +72,16 @@ export default function AddPersonForm() {
             className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
         <div>

@@ -16,12 +16,12 @@ const STATUS_COLORS: Record<string, string> = {
   NO_RESPONSE: "bg-gray-100 text-gray-500",
 };
 
-interface Person { id: string; fullName: string; role: string; division: string | null; classLabel: string | null; }
+interface Person { id: string; fullName: string; role: string; status: string; division: string | null; classLabel: string | null; }
 interface Discipline { id: string; name: string; gunType: string | null; }
 interface Commitment {
   id: string;
   status: string;
-  person: { id: string; fullName: string; role: string; division: string | null; classLabel: string | null };
+  person: { id: string; fullName: string; role: string; status: string; division: string | null; classLabel: string | null };
   discipline: { id: string; name: string; gunType: string | null };
 }
 
@@ -174,7 +174,9 @@ export default function RosterManager({ eventId, people, disciplines, initialCom
                 >
                   <option value="">— select person —</option>
                   {people.map((p) => (
-                    <option key={p.id} value={p.id}>{p.fullName} ({p.role})</option>
+                    <option key={p.id} value={p.id}>
+                      {p.fullName} ({p.role}{p.status !== "ACTIVE" ? ` · ${p.status}` : ""})
+                    </option>
                   ))}
                 </select>
               </div>

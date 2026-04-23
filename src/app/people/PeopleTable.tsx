@@ -1,11 +1,13 @@
 "use client";
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface Person {
   id: string;
   fullName: string;
   role: string;
+  status: string;
   team: string | null;
   division: string | null;
   classLabel: string | null;
@@ -14,6 +16,7 @@ interface Person {
 }
 
 const ROLES = ["ATHLETE", "COACH", "RO", "VOLUNTEER", "STAFF"] as const;
+const STATUSES = ["ACTIVE", "INACTIVE", "ALUMNI"] as const;
 
 const ROLE_COLORS: Record<string, string> = {
   ATHLETE:   "bg-blue-100 text-blue-700",
@@ -23,10 +26,25 @@ const ROLE_COLORS: Record<string, string> = {
   STAFF:     "bg-gray-100 text-gray-600",
 };
 
+const STATUS_COLORS: Record<string, string> = {
+  ACTIVE:   "bg-emerald-100 text-emerald-700",
+  INACTIVE: "bg-gray-100 text-gray-500",
+  ALUMNI:   "bg-amber-100 text-amber-700",
+};
+
+const STATUS_NEXT: Record<string, string> = {
+  ACTIVE:   "INACTIVE",
+  INACTIVE: "ACTIVE",
+  ALUMNI:   "ACTIVE",
+};
+
 export default function PeopleTable({ people }: { people: Person[] }) {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [teamFilter, setTeamFilter] = useState("");
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const teams = useMemo(() => {
     const set = new Set<string>();
@@ -39,10 +57,35 @@ export default function PeopleTable({ people }: { people: Person[] }) {
     return people.filter((p) => {
       if (q && !p.fullName.toLowerCase().includes(q) && !(p.team ?? "").toLowerCase().includes(q)) return false;
       if (roleFilter && p.role !== roleFilter) return false;
+      if (statusFilter && p.status !== statusFilter) return false;
       if (teamFilter && p.team !== teamFilter) return false;
       return true;
     });
-  }, [people, search, roleFilter, teamFilter]);
+  }, [people, search, roleFilter, statusFilter, teamFilter]);
+
+  async function handleStatusToggle(person: Person, newStatus: string) {
+    setTogglingId(person.id);
+    try {
+      await fetch(`/api/people/${person.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: person.fullName,
+          email: person.email,
+          role: person.role,
+          status: newStatus,
+          team: person.team,
+          division: person.division,
+          classLabel: person.classLabel,
+        }),
+      });
+      router.refresh();
+    } finally {
+      setTogglingId(null);
+    }
+  }
+
+  const hasFilters = search || roleFilter || statusFilter || teamFilter;
 
   return (
     <div>
@@ -69,6 +112,17 @@ export default function PeopleTable({ people }: { people: Person[] }) {
             {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
           </select>
         </div>
+        <div>
+          <label className="block text-xs text-gray-500 mb-1">Status</label>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All statuses</option>
+            {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
         {teams.length > 0 && (
           <div>
             <label className="block text-xs text-gray-500 mb-1">Team</label>
@@ -82,9 +136,9 @@ export default function PeopleTable({ people }: { people: Person[] }) {
             </select>
           </div>
         )}
-        {(search || roleFilter || teamFilter) && (
+        {hasFilters && (
           <button
-            onClick={() => { setSearch(""); setRoleFilter(""); setTeamFilter(""); }}
+            onClick={() => { setSearch(""); setRoleFilter(""); setStatusFilter(""); setTeamFilter(""); }}
             className="text-xs text-gray-500 hover:text-gray-700 mt-4"
           >
             Clear filters
@@ -105,6 +159,7 @@ export default function PeopleTable({ people }: { people: Person[] }) {
               <tr>
                 <th className="text-left px-4 py-3 text-gray-600 font-medium">Name</th>
                 <th className="text-left px-4 py-3 text-gray-600 font-medium">Role</th>
+                <th className="text-left px-4 py-3 text-gray-600 font-medium">Status</th>
                 <th className="text-left px-4 py-3 text-gray-600 font-medium">Team</th>
                 <th className="text-left px-4 py-3 text-gray-600 font-medium">Division</th>
                 <th className="text-left px-4 py-3 text-gray-600 font-medium">Class</th>
@@ -115,12 +170,22 @@ export default function PeopleTable({ people }: { people: Person[] }) {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filtered.map((p) => (
-                <tr key={p.id} className="hover:bg-gray-50">
+                <tr key={p.id} className={`hover:bg-gray-50 ${p.status === "INACTIVE" ? "opacity-60" : ""}`}>
                   <td className="px-4 py-2 font-medium text-gray-800">{p.fullName}</td>
                   <td className="px-4 py-2">
                     <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium ${ROLE_COLORS[p.role] ?? "bg-gray-100 text-gray-600"}`}>
                       {p.role}
                     </span>
+                  </td>
+                  <td className="px-4 py-2">
+                    <button
+                      title={`Click to set to ${STATUS_NEXT[p.status] ?? "ACTIVE"}`}
+                      disabled={togglingId === p.id}
+                      onClick={() => handleStatusToggle(p, STATUS_NEXT[p.status] ?? "ACTIVE")}
+                      className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium cursor-pointer hover:opacity-80 disabled:cursor-wait ${STATUS_COLORS[p.status] ?? "bg-gray-100 text-gray-600"}`}
+                    >
+                      {p.status}
+                    </button>
                   </td>
                   <td className="px-4 py-2 text-gray-500">{p.team || "—"}</td>
                   <td className="px-4 py-2 text-gray-500">{p.division || "—"}</td>
