@@ -79,6 +79,9 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
         <Link href={`/events/${event.id}/forecast`} className="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800 text-sm font-medium">
           Forecast
         </Link>
+        <Link href={`/events/${event.id}/squads`} className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 text-sm font-medium">
+          Squad Planner
+        </Link>
         <Link href={`/events/${event.id}/roster`} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded text-sm font-medium">
           Roster (All)
         </Link>
