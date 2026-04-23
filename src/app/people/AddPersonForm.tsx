@@ -5,13 +5,18 @@ import { useRouter } from "next/navigation";
 const ROLES = ["ATHLETE", "COACH", "RO", "VOLUNTEER", "STAFF"] as const;
 const STATUSES = ["ACTIVE", "INACTIVE", "ALUMNI"] as const;
 
-export default function AddPersonForm() {
+interface Team {
+  id: string;
+  name: string;
+}
+
+export default function AddPersonForm({ teams }: { teams: Team[] }) {
   const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("ATHLETE");
   const [status, setStatus] = useState("ACTIVE");
-  const [team, setTeam] = useState("");
+  const [teamId, setTeamId] = useState("");
   const [division, setDivision] = useState("");
   const [classLabel, setClassLabel] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,13 +30,13 @@ export default function AddPersonForm() {
       const res = await fetch("/api/people", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullName, email, role, status, team, division, classLabel }),
+        body: JSON.stringify({ fullName, email, role, status, teamId: teamId || null, division, classLabel }),
       });
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Failed to add person");
       }
-      setFullName(""); setEmail(""); setRole("ATHLETE"); setStatus("ACTIVE"); setTeam(""); setDivision(""); setClassLabel("");
+      setFullName(""); setEmail(""); setRole("ATHLETE"); setStatus("ACTIVE"); setTeamId(""); setDivision(""); setClassLabel("");
       router.refresh();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Unknown error");
@@ -44,7 +49,8 @@ export default function AddPersonForm() {
     <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-lg p-5">
       <h2 className="font-semibold text-gray-800 mb-4">Add Person</h2>
       {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">        <div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
           <input
             required
@@ -95,12 +101,14 @@ export default function AddPersonForm() {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Team</label>
-          <input
-            value={team}
-            onChange={(e) => setTeam(e.target.value)}
+          <select
+            value={teamId}
+            onChange={(e) => setTeamId(e.target.value)}
             className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="e.g. Lincoln HS, Central Academy"
-          />
+          >
+            <option value="">No team</option>
+            {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </select>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Class</label>

@@ -7,12 +7,15 @@ export const dynamic = "force-dynamic";
 
 export default async function EditPersonPage({ params }: { params: Promise<{ personId: string }> }) {
   const { personId } = await params;
-  const person = await prisma.person.findUnique({
-    where: { id: personId },
-    include: {
-      _count: { select: { athleteAssignments: true, staffAssignments: true, commitmentStatuses: true } },
-    },
-  });
+  const [person, teams] = await Promise.all([
+    prisma.person.findUnique({
+      where: { id: personId },
+      include: {
+        _count: { select: { athleteAssignments: true, staffAssignments: true, commitmentStatuses: true } },
+      },
+    }),
+    prisma.team.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+  ]);
   if (!person) notFound();
 
   return (
@@ -40,7 +43,7 @@ export default async function EditPersonPage({ params }: { params: Promise<{ per
         </div>
       </div>
 
-      <EditPersonForm person={person} />
+      <EditPersonForm person={person} teams={teams} />
 
       {person._count.athleteAssignments + person._count.staffAssignments > 0 && (
         <p className="mt-4 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-3 py-2">

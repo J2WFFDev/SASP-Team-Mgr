@@ -5,14 +5,18 @@ import PeopleTable from "./PeopleTable";
 export const dynamic = "force-dynamic";
 
 export default async function PeoplePage() {
-  const people = await prisma.person.findMany({
-    orderBy: { fullName: "asc" },
-    include: {
-      _count: {
-        select: { athleteAssignments: true, staffAssignments: true, commitmentStatuses: true },
+  const [people, teams] = await Promise.all([
+    prisma.person.findMany({
+      orderBy: { fullName: "asc" },
+      include: {
+        teamRef: { select: { id: true, name: true } },
+        _count: {
+          select: { athleteAssignments: true, staffAssignments: true, commitmentStatuses: true },
+        },
       },
-    },
-  });
+    }),
+    prisma.team.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+  ]);
 
   return (
     <div className="max-w-5xl mx-auto py-10 px-6">
@@ -21,7 +25,7 @@ export default async function PeoplePage() {
         <span className="text-sm text-gray-500">{people.length} {people.length === 1 ? "person" : "people"}</span>
       </div>
 
-      <AddPersonForm />
+      <AddPersonForm teams={teams} />
 
       <div className="mt-8">
         {people.length === 0 ? (

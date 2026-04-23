@@ -9,6 +9,8 @@ interface Person {
   role: string;
   status: string;
   team: string | null;
+  teamId: string | null;
+  teamRef: { id: string; name: string } | null;
   division: string | null;
   classLabel: string | null;
   email: string | null;
@@ -48,17 +50,21 @@ export default function PeopleTable({ people }: { people: Person[] }) {
 
   const teams = useMemo(() => {
     const set = new Set<string>();
-    people.forEach((p) => { if (p.team) set.add(p.team); });
+    people.forEach((p) => {
+      const name = p.teamRef?.name || p.team;
+      if (name) set.add(name);
+    });
     return Array.from(set).sort();
   }, [people]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
     return people.filter((p) => {
-      if (q && !p.fullName.toLowerCase().includes(q) && !(p.team ?? "").toLowerCase().includes(q)) return false;
+      const teamName = p.teamRef?.name || p.team || "";
+      if (q && !p.fullName.toLowerCase().includes(q) && !teamName.toLowerCase().includes(q)) return false;
       if (roleFilter && p.role !== roleFilter) return false;
       if (statusFilter && p.status !== statusFilter) return false;
-      if (teamFilter && p.team !== teamFilter) return false;
+      if (teamFilter && (p.teamRef?.name || p.team) !== teamFilter) return false;
       return true;
     });
   }, [people, search, roleFilter, statusFilter, teamFilter]);
@@ -74,7 +80,7 @@ export default function PeopleTable({ people }: { people: Person[] }) {
           email: person.email,
           role: person.role,
           status: newStatus,
-          team: person.team,
+          teamId: person.teamId,
           division: person.division,
           classLabel: person.classLabel,
         }),
@@ -187,7 +193,7 @@ export default function PeopleTable({ people }: { people: Person[] }) {
                       {p.status}
                     </button>
                   </td>
-                  <td className="px-4 py-2 text-gray-500">{p.team || "—"}</td>
+                  <td className="px-4 py-2 text-gray-500">{p.teamRef?.name || p.team || "—"}</td>
                   <td className="px-4 py-2 text-gray-500">{p.division || "—"}</td>
                   <td className="px-4 py-2 text-gray-500">{p.classLabel || "—"}</td>
                   <td className="px-4 py-2 text-gray-500">{p.email || "—"}</td>
