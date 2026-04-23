@@ -3,12 +3,15 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 const ROLES = ["ATHLETE", "COACH", "RO", "VOLUNTEER", "STAFF"] as const;
+const STATUSES = ["ACTIVE", "INACTIVE", "ALUMNI"] as const;
 
 interface Person {
   id: string;
   fullName: string;
   email: string | null;
   role: string;
+  status: string;
+  team: string | null;
   division: string | null;
   classLabel: string | null;
 }
@@ -18,6 +21,8 @@ export default function EditPersonForm({ person }: { person: Person }) {
   const [fullName, setFullName] = useState(person.fullName);
   const [email, setEmail] = useState(person.email ?? "");
   const [role, setRole] = useState(person.role);
+  const [status, setStatus] = useState(person.status);
+  const [team, setTeam] = useState(person.team ?? "");
   const [division, setDivision] = useState(person.division ?? "");
   const [classLabel, setClassLabel] = useState(person.classLabel ?? "");
   const [loading, setLoading] = useState(false);
@@ -32,7 +37,7 @@ export default function EditPersonForm({ person }: { person: Person }) {
       const res = await fetch(`/api/people/${person.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullName, email, role, division, classLabel }),
+        body: JSON.stringify({ fullName, email, role, status, team, division, classLabel }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -99,12 +104,31 @@ export default function EditPersonForm({ person }: { person: Person }) {
           </select>
         </div>
         <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+        <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Division</label>
           <input
             value={division}
             onChange={(e) => setDivision(e.target.value)}
             className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="e.g. Open, Junior"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Team</label>
+          <input
+            value={team}
+            onChange={(e) => setTeam(e.target.value)}
+            className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="e.g. Lincoln HS, Central Academy"
           />
         </div>
         <div>

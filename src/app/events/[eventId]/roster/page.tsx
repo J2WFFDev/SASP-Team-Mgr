@@ -11,12 +11,12 @@ export default async function RosterPage({ params }: { params: Promise<{ eventId
   if (!event) notFound();
 
   const [people, disciplines, commitments] = await Promise.all([
-    prisma.person.findMany({ orderBy: { fullName: "asc" } }),
+    prisma.person.findMany({ where: { status: "ACTIVE" }, orderBy: { fullName: "asc" } }),
     prisma.discipline.findMany({ orderBy: { name: "asc" } }),
     prisma.commitmentStatus.findMany({
       where: { eventId },
       include: {
-        person: { select: { id: true, fullName: true, role: true, division: true, classLabel: true } },
+        person: { select: { id: true, fullName: true, role: true, status: true, division: true, classLabel: true } },
         discipline: { select: { id: true, name: true, gunType: true } },
       },
       orderBy: [{ person: { fullName: "asc" } }, { discipline: { name: "asc" } }],

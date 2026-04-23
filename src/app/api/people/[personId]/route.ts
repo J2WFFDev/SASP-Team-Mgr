@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { PersonRole } from "@prisma/client";
+import { PersonRole, PersonStatus } from "@prisma/client";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ personId: string }> }) {
   const { personId } = await params;
@@ -12,10 +12,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ per
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ personId: string }> }) {
   try {
     const { personId } = await params;
-    const { fullName, email, role, division, classLabel } = await req.json();
+    const { fullName, email, role, status, team, division, classLabel } = await req.json();
     if (!fullName) return NextResponse.json({ error: "fullName is required" }, { status: 400 });
     if (role && !Object.values(PersonRole).includes(role)) {
       return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+    }
+    if (status && !Object.values(PersonStatus).includes(status)) {
+      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
     const person = await prisma.person.update({
       where: { id: personId },
@@ -23,6 +26,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ pers
         fullName,
         email: email || null,
         role: role || "ATHLETE",
+        status: status || "ACTIVE",
+        team: team || null,
         division: division || null,
         classLabel: classLabel || null,
       },

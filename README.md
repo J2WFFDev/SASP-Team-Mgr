@@ -4,9 +4,10 @@ MVP scheduling and squadding web application for the 2026 WilcoSS Texas State Ch
 
 ## Tech Stack
 
-- **Next.js 14** (App Router) + TypeScript
+- **Next.js 15** (App Router) + TypeScript
 - **Tailwind CSS**
 - **Prisma** + **PostgreSQL**
+- **NextAuth.js v5** (Auth.js) — credentials-based authentication
 
 ## Getting Started
 
@@ -22,15 +23,20 @@ MVP scheduling and squadding web application for the 2026 WilcoSS Texas State Ch
    npm install
    ```
 
-2. Copy environment file and set your database URL:
+2. Copy environment file and configure:
    ```bash
    cp .env.example .env
-   # Edit .env and set DATABASE_URL
+   # Edit .env and set DATABASE_URL and AUTH_SECRET
+   ```
+
+   Generate a secure `AUTH_SECRET`:
+   ```bash
+   openssl rand -base64 32
    ```
 
 3. Run Prisma migrations:
    ```bash
-   npx prisma migrate dev --name init
+   npx prisma migrate dev
    ```
 
 4. (Optional) Seed with sample data:
@@ -45,14 +51,35 @@ MVP scheduling and squadding web application for the 2026 WilcoSS Texas State Ch
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## Authentication & Roles
+
+All pages require login. Navigate to `/register` to create the first account — it automatically becomes **League Admin**.
+
+| Role | Capabilities |
+|------|-------------|
+| `LEAGUE_ADMIN` | Full access: manage disciplines, create/edit events, manage all people and teams |
+| `MATCH_DIRECTOR` | Create and manage events (any head coach or league admin can be a Match Director) |
+| `HEAD_COACH` | Manage their team's roster and commitment status |
+
+### Vercel Deployment
+
+Add these environment variables in your Vercel project settings:
+
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | Pooled PostgreSQL connection string |
+| `DIRECT_URL` | Non-pooled connection (required for Neon/Supabase migrations) |
+| `AUTH_SECRET` | Random secret (generate with `openssl rand -base64 32`) |
+
 ## Features
 
-- **Events**: Create and manage match events
-- **Import TSV**: Import scheduling data from Google Sheets exports (Schedule, Squadding, Athlete Schedule, Volunteer/Coach Schedule, Reference data)
+- **Events**: Create and manage match events (Match Directors and League Admins)
+- **Disciplines**: Global disciplines shared across all teams (League Admin only)
+- **People & Rosters**: Manage athletes, coaches, and staff per team
+- **Import TSV**: Import scheduling data from Google Sheets exports
 - **Master Schedule**: View all athlete assignments grouped by flight
 - **Athlete Schedule**: Per-athlete schedule view
 - **Staff Schedule**: Coach/RO/volunteer schedule view
-- **Flight Detail**: Roster for a specific flight with relay/order
 - **CSV/TSV Export**: Export schedules back to spreadsheet-compatible formats
 
 ## Data Import
@@ -74,16 +101,17 @@ Sample TSV fixtures are available under `data/tsv/`. You can import them via the
 | Path | Description |
 |------|-------------|
 | `/` | Landing page |
+| `/login` | Sign in |
+| `/register` | Create account (first user = League Admin) |
 | `/events` | Events list + create |
 | `/events/[id]` | Event overview with stats |
 | `/events/[id]/import` | TSV import page |
 | `/events/[id]/schedule` | Master schedule table |
-| `/events/[id]/athletes` | Athletes list |
-| `/events/[id]/athletes/[personId]` | Individual athlete schedule |
+| `/events/[id]/roster` | Commitment status roster |
 | `/events/[id]/staff` | Staff/volunteers list |
-| `/events/[id]/staff/[personId]` | Individual staff schedule |
-| `/events/[id]/flights` | Flights list |
 | `/events/[id]/flights/[flightId]` | Flight detail with roster |
+| `/people` | People list |
+| `/disciplines` | Disciplines (League Admin only) |
 
 ## Export Endpoints
 
